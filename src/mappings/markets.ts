@@ -205,10 +205,7 @@ export function updateMarket(
       market.underlyingPrice = tokenPriceUSD
         .div(ethPriceInUSD)
         .truncate(market.underlyingDecimals)
-      // if USDC, we only update ETH price
-      // if (market.id != cUSDCAddress) {
-      //   market.underlyingPriceUSD = tokenPriceUSD.truncate(market.underlyingDecimals)
-      // }
+      market.underlyingPriceUSD = tokenPriceUSD.truncate(market.underlyingDecimals)
     }
 
     market.accrualBlockTimestamp = contract.accrualBlockTimestamp().toI32()
@@ -257,11 +254,14 @@ export function updateMarket(
       .div(exponentToBigDecimal(market.underlyingDecimals))
       .truncate(market.underlyingDecimals)
 
+    // rough estimation based on https://moonriver.moonscan.io/chart/blocks
+    let blocksPerYear = 365 * 3600
+
     // Must convert to BigDecimal, and remove 10^18 that is used for Exp in Compound Solidity
     market.borrowRate = contract
       .borrowRatePerTimestamp()
       .toBigDecimal()
-      .times(BigDecimal.fromString('2102400'))
+      .times(BigInt.fromI32(blocksPerYear).toBigDecimal())
       .div(mantissaFactorBD)
       .truncate(mantissaFactor)
 
@@ -274,7 +274,7 @@ export function updateMarket(
     } else {
       market.supplyRate = supplyRatePerBlock.value
         .toBigDecimal()
-        .times(BigDecimal.fromString('2102400'))
+        .times(BigInt.fromI32(blocksPerYear).toBigDecimal())
         .div(mantissaFactorBD)
         .truncate(mantissaFactor)
     }
