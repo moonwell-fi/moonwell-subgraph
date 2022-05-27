@@ -358,4 +358,6 @@ type UsageDailySnapshot @entity {
 
   borrowCount: Int!
   supplyCount: Int!
+  borrowAmount: BigDecimal!
+  supplyAmount: BigDecimal!
 }

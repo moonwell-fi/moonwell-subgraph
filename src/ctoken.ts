@@ -85,6 +85,7 @@ export function handleMint(event: Mint): void {
 
   let snapshot = getOrCreateUsageDailySnapshot(event.block.timestamp.toI32())
   snapshot.supplyCount = snapshot.supplyCount + 1
+  snapshot.supplyAmount = snapshot.supplyAmount.plus(underlyingAmount)
   snapshot.save()
 }
 
@@ -207,6 +208,7 @@ export function handleBorrow(event: Borrow): void {
 
   let snapshot = getOrCreateUsageDailySnapshot(event.block.timestamp.toI32())
   snapshot.borrowCount = snapshot.borrowCount + 1
+  snapshot.borrowAmount = snapshot.borrowAmount.plus(borrowAmount)
   snapshot.save()
 }
 
