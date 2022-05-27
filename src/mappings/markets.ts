@@ -1,7 +1,5 @@
-// For each division by 10, add one to exponent to truncate one significant figure
 import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
 import { Market, Comptroller } from '../../generated/schema'
-// PriceOracle2 is valid from 8498422 until present block (until another proxy upgrade)
 import { PriceOracle2 } from '../../generated/templates/CToken/PriceOracle2'
 import { ERC20 } from '../../generated/templates/CToken/ERC20'
 import { CToken } from '../../generated/templates/CToken/CToken'
@@ -16,55 +14,24 @@ import {
 
 let mMovrAddress = '0x6a1a771c7826596652dadc9145feaae62b1cd07f'
 
-// Used for all cERC20 contracts
-function getTokenPrice(eventAddress: Address, underlyingDecimals: i32): BigDecimal {
+function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
   let comptroller = Comptroller.load('1')!
-  let oracleAddress = Address.fromString(comptroller.priceOracle!)
-  let underlyingPrice: BigDecimal
+  let oracle = PriceOracle2.bind(Address.fromString(comptroller.priceOracle!))
+  let tryPrice = oracle.try_getUnderlyingPrice(token)
 
-  /* PriceOracle2 is used at the block the Comptroller starts using it.
-   * see here https://etherscan.io/address/0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b#events
-   * Search for event topic 0xd52b2b9b7e9ee655fcb95d2e5b9e0c9f69e7ef2b8e9d2d0ea78402d576d22e22,
-   * and see block 7715908.
-   *
-   * This must use the cToken address.
-   *
-   * Note this returns the value without factoring in token decimals and wei, so we must divide
-   * the number by (ethDecimals - tokenDecimals) and again by the mantissa.
-   * USDC would be 10 ^ ((18 - 6) + 18) = 10 ^ 30
-   *
-   * Note that they deployed 3 different PriceOracles at the beginning of the Comptroller,
-   * and that they handle the decimals different, which can break the subgraph. So we actually
-   * defer to Oracle 1 before block 7715908, which works,
-   * until this one is deployed, which was used for 121 days */
-  let mantissaDecimalFactor = 18 - underlyingDecimals + 18
-  let bdFactor = exponentToBigDecimal(mantissaDecimalFactor)
-  let oracle2 = PriceOracle2.bind(oracleAddress)
-  let tryPrice = oracle2.try_getUnderlyingPrice(eventAddress)
-
-  underlyingPrice = tryPrice.reverted
+  return tryPrice.reverted
     ? zeroBD
-    : tryPrice.value.toBigDecimal().div(bdFactor)
-
-  /* PriceOracle(1) is used (only for the first ~100 blocks of Comptroller. Annoying but we must
-   * handle this. We use it for more than 100 blocks, see reason at top of if statement
-   * of PriceOracle2.
-   *
-   * This must use the token address, not the cToken address.
-   *
-   * Note this returns the value already factoring in token decimals and wei, therefore
-   * we only need to divide by the mantissa, 10^18 */
-
-  return underlyingPrice
+    : tryPrice.value
+        .toBigDecimal()
+        .div(exponentToBigDecimal(18 - underlyingDecimals + 18))
 }
 
 export function createMarket(marketAddress: string): Market {
-  let market: Market
+  let market = new Market(marketAddress)
   let contract = CToken.bind(Address.fromString(marketAddress))
 
-  // It is CETH, which has a slightly different interface
+  // MGlimmer doesn't have method `underlying` (unlike MErc20) therefore we handle it differently
   if (marketAddress == mMovrAddress) {
-    market = new Market(marketAddress)
     market.underlyingAddress = '0x0000000000000000000000000000000000000000'
     market.underlyingDecimals = 18
     market.underlyingPrice = BigDecimal.fromString('1')
@@ -72,7 +39,6 @@ export function createMarket(marketAddress: string): Market {
     market.underlyingSymbol = 'MOVR'
     market.underlyingPriceUSD = zeroBD
   } else {
-    market = new Market(marketAddress)
     let underlyingContract = ERC20.bind(contract.underlying())
     market.underlyingAddress = contract.underlying().toHexString()
     market.underlyingDecimals = underlyingContract.decimals()
@@ -107,7 +73,6 @@ export function createMarket(marketAddress: string): Market {
   return market
 }
 
-// Only to be used after block 10678764, since it's aimed to fix the change to USD based price oracle.
 function getETHinUSD(): BigDecimal {
   let comptroller = Comptroller.load('1')!
   let oracleAddress = Address.fromString(comptroller.priceOracle!)
@@ -121,10 +86,7 @@ function getETHinUSD(): BigDecimal {
   return ethPriceInUSD
 }
 
-export function updateMarket(
-  marketAddress: Address,
-  blockTimestamp: i32,
-): Market {
+export function updateMarket(marketAddress: Address, blockTimestamp: i32): Market {
   let marketID = marketAddress.toHexString()
   let market = Market.load(marketID)
   if (market == null) {
