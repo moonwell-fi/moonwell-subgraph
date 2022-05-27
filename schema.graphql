@@ -5,7 +5,7 @@ type Comptroller @entity {
     "ID is set to 1"
     id: ID!
     "Address of price oracle the comptroller uses"
-    priceOracle: Bytes
+    priceOracle: String
     "Factor used to determine repayAmount for liquidating"
     closeFactor: BigInt
     "The percent bonus liquidators get for liquidating"
@@ -28,7 +28,7 @@ type Market @entity {
     "Exchange rate of tokens / cTokens"
     exchangeRate:  BigDecimal!
     "Address of the interest rate model"
-    interestRateModelAddress: Bytes!
+    interestRateModelAddress: String!
     "Name of the cToken"
     name: String!
     "Reserves stored in the contract"
@@ -44,7 +44,7 @@ type Market @entity {
     "CToken supply. CTokens have 8 decimals"
     totalSupply: BigDecimal!
     "Underlying token address"
-    underlyingAddress: Bytes!
+    underlyingAddress: String!
     "Underlying token name"
     underlyingName: String!
     "Underlying price of token in ETH (ex. 0.007 DAI)"
@@ -157,7 +157,7 @@ type AccountCTokenTransaction @entity {
 
   account: AccountCToken!
 
-  tx_hash: Bytes!
+  tx_hash: String!
 
   timestamp: BigInt!
 
@@ -176,9 +176,9 @@ interface CTokenTransfer {
     "cTokens transferred"
     amount: BigDecimal!
     "Account that received tokens"
-    to: Bytes!
+    to: String!
     "Account that sent tokens"
-    from: Bytes!
+    from: String!
     "Block number"
     blockNumber: Int!
     "Block time"
@@ -197,9 +197,9 @@ type TransferEvent implements CTokenTransfer @entity {
     "cTokens transferred"
     amount: BigDecimal!
     "Account that received tokens"
-    to: Bytes!
+    to: String!
     "Account that sent tokens"
-    from: Bytes!
+    from: String!
     "Block number"
     blockNumber: Int!
     "Block time"
@@ -218,9 +218,9 @@ type MintEvent implements CTokenTransfer @entity {
     "cTokens transferred"
     amount: BigDecimal!
     "Account that received tokens (minter)"
-    to: Bytes!
+    to: String!
     "Account that sent tokens (CToken contract)"
-    from: Bytes!
+    from: String!
     "Block number"
     blockNumber: Int!
     "Block time"
@@ -241,9 +241,9 @@ type RedeemEvent implements CTokenTransfer @entity {
     "cTokens transferred"
     amount: BigDecimal!
     "Account that received tokens (CToken contract)"
-    to: Bytes!
+    to: String!
     "Account that sent tokens (redeemer)"
-    from: Bytes!
+    from: String!
     "Block number"
     blockNumber: Int!
     "Block time"
@@ -264,9 +264,9 @@ type LiquidationEvent implements CTokenTransfer @entity {
     "cTokens seized"
     amount: BigDecimal!
     "Liquidator receiving tokens"
-    to: Bytes!
+    to: String!
     "Account being liquidated (borrower)"
-    from: Bytes!
+    from: String!
     "Block number"
     blockNumber: Int!
     "Block time"
@@ -291,7 +291,7 @@ interface UnderlyingTransfer {
     "Total borrows of this asset the account has"
     accountBorrows: BigDecimal!
     "Account that borrowed the tokens"
-    borrower: Bytes!
+    borrower: String!
     "Block number"
     blockNumber: Int!
     "Block time"
@@ -311,7 +311,7 @@ type BorrowEvent implements UnderlyingTransfer @entity {
     "Total borrows of this asset the account has"
     accountBorrows: BigDecimal!
     "Account that borrowed the tokens"
-    borrower: Bytes!
+    borrower: String!
     "Block number"
     blockNumber: Int!
     "Block time"
@@ -332,7 +332,7 @@ type RepayEvent implements UnderlyingTransfer @entity {
     "Total borrows of this asset the account has"
     accountBorrows: BigDecimal!
     "Account that borrowed the tokens"
-    borrower: Bytes!
+    borrower: String!
     "Block number"
     blockNumber: Int!
     "Block time"
@@ -340,5 +340,5 @@ type RepayEvent implements UnderlyingTransfer @entity {
     "Symbol of the borrowed underlying asset"
     underlyingSymbol: String!
     "Payer of the borrow funds"
-    payer: Bytes!
+    payer: String!
 }

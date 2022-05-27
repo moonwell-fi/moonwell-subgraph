@@ -1,14 +1,12 @@
-/* eslint-disable prefer-const */ // to satisfy AS compiler
-
 // For each division by 10, add one to exponent to truncate one significant figure
 import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
-import { Market, Comptroller } from '../types/schema'
+import { Market, Comptroller } from '../../generated/schema'
 // PriceOracle is valid from Comptroller deployment until block 8498421
-import { PriceOracle } from '../types/templates/CToken/PriceOracle'
+import { PriceOracle } from '../../generated/templates/CToken/PriceOracle'
 // PriceOracle2 is valid from 8498422 until present block (until another proxy upgrade)
-import { PriceOracle2 } from '../types/templates/CToken/PriceOracle2'
-import { ERC20 } from '../types/templates/CToken/ERC20'
-import { CToken } from '../types/templates/CToken/CToken'
+import { PriceOracle2 } from '../../generated/templates/CToken/PriceOracle2'
+import { ERC20 } from '../../generated/templates/CToken/ERC20'
+import { CToken } from '../../generated/templates/CToken/CToken'
 
 import {
   exponentToBigDecimal,
@@ -29,8 +27,8 @@ function getTokenPrice(
   underlyingAddress: Address,
   underlyingDecimals: i32,
 ): BigDecimal {
-  let comptroller = Comptroller.load('1')
-  let oracleAddress = comptroller.priceOracle as Address
+  let comptroller = Comptroller.load('1')!
+  let oracleAddress = Address.fromString(comptroller.priceOracle!)
   let underlyingPrice: BigDecimal
 
   /* PriceOracle2 is used at the block the Comptroller starts using it.
@@ -106,10 +104,8 @@ export function createMarket(marketAddress: string): Market {
   if (marketAddress == qiAvaxAddress) {
     // log.debug("test 5", ["hi"])
     market = new Market(marketAddress)
-    market.underlyingAddress = Address.fromString(
-      '0x0000000000000000000000000000000000000000',
-    )
-    market.underlyingDecimals = 18
+    ;(market.underlyingAddress = '0x0000000000000000000000000000000000000000'),
+      (market.underlyingDecimals = 18)
     market.underlyingPrice = BigDecimal.fromString('1')
     market.underlyingName = 'MOVR'
     market.underlyingSymbol = 'MOVR'
@@ -118,8 +114,8 @@ export function createMarket(marketAddress: string): Market {
   } else {
     // log.debug("test 6", ["hi"])
     market = new Market(marketAddress)
-    market.underlyingAddress = contract.underlying()
-    let underlyingContract = ERC20.bind(market.underlyingAddress as Address)
+    let underlyingContract = ERC20.bind(contract.underlying())
+    market.underlyingAddress = contract.underlying().toHexString()
     market.underlyingDecimals = underlyingContract.decimals()
     // if (market.underlyingAddress.toHexString() != daiAddress) {
     market.underlyingName = underlyingContract.name()
@@ -143,8 +139,8 @@ export function createMarket(marketAddress: string): Market {
   market.collateralFactor = zeroBD
   market.exchangeRate = zeroBD
   market.interestRateModelAddress = interestRateModelAddress.reverted
-    ? Address.fromString('0x0000000000000000000000000000000000000000')
-    : interestRateModelAddress.value
+    ? '0x0000000000000000000000000000000000000000'
+    : interestRateModelAddress.value.toHexString()
   market.name = contract.name()
   market.reserves = zeroBD
   market.supplyRate = zeroBD
@@ -162,8 +158,8 @@ export function createMarket(marketAddress: string): Market {
 
 // Only to be used after block 10678764, since it's aimed to fix the change to USD based price oracle.
 function getETHinUSD(blockNumber: i32): BigDecimal {
-  let comptroller = Comptroller.load('1')
-  let oracleAddress = comptroller.priceOracle as Address
+  let comptroller = Comptroller.load('1')!
+  let oracleAddress = Address.fromString(comptroller.priceOracle!)
   let oracle = PriceOracle2.bind(oracleAddress)
   let tryPrice = oracle.try_getUnderlyingPrice(Address.fromString(qiAvaxAddress))
 
@@ -199,7 +195,7 @@ export function updateMarket(
       let tokenPriceUSD = getTokenPrice(
         blockNumber,
         contractAddress,
-        market.underlyingAddress as Address,
+        Address.fromString(market.underlyingAddress),
         market.underlyingDecimals,
       )
       market.underlyingPrice = tokenPriceUSD
@@ -210,10 +206,7 @@ export function updateMarket(
 
     market.accrualBlockTimestamp = contract.accrualBlockTimestamp().toI32()
     market.blockTimestamp = blockTimestamp
-    market.totalSupply = contract
-      .totalSupply()
-      .toBigDecimal()
-      .div(cTokenDecimalsBD)
+    market.totalSupply = contract.totalSupply().toBigDecimal().div(cTokenDecimalsBD)
 
     /* Exchange rate explanation
        In Practice
