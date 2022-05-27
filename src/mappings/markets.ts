@@ -123,7 +123,6 @@ function getETHinUSD(): BigDecimal {
 
 export function updateMarket(
   marketAddress: Address,
-  blockNumber: i32,
   blockTimestamp: i32,
 ): Market {
   let marketID = marketAddress.toHexString()
