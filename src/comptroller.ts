@@ -26,9 +26,6 @@ export function handleMarketListed(event: MarketListed): void {
 
 export function handleMarketEntered(event: MarketEntered): void {
   let market = Market.load(event.params.cToken.toHexString())
-  // Null check needed to avoid crashing on a new market added. Ideally when dynamic data
-  // sources can source from the contract creation block and not the time the
-  // comptroller adds the market, we can avoid this altogether
   if (market != null) {
     let accountID = event.params.account.toHex()
     let account = Account.load(accountID)
@@ -52,9 +49,6 @@ export function handleMarketEntered(event: MarketEntered): void {
 
 export function handleMarketExited(event: MarketExited): void {
   let market = Market.load(event.params.cToken.toHexString())
-  // Null check needed to avoid crashing on a new market added. Ideally when dynamic data
-  // sources can source from the contract creation block and not the time the
-  // comptroller adds the market, we can avoid this altogether
   if (market != null) {
     let accountID = event.params.account.toHex()
     let account = Account.load(accountID)
@@ -88,9 +82,6 @@ export function handleNewCloseFactor(event: NewCloseFactor): void {
 
 export function handleNewCollateralFactor(event: NewCollateralFactor): void {
   let market = Market.load(event.params.cToken.toHexString())
-  // Null check needed to avoid crashing on a new market added. Ideally when dynamic data
-  // sources can source from the contract creation block and not the time the
-  // comptroller adds the market, we can avoid this altogether
   if (market != null) {
     market.collateralFactor = event.params.newCollateralFactorMantissa
       .toBigDecimal()
