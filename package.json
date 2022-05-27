@@ -9,10 +9,10 @@
     "deploy": "graph deploy 0xbe1/moonwell --node https://api.thegraph.com/deploy/"
   },
   "dependencies": {
-    "@graphprotocol/graph-ts": "0.26.0"
+    "@graphprotocol/graph-ts": "0.27.0"
   },
   "devDependencies": {
-    "@graphprotocol/graph-cli": "0.28.0",
+    "@graphprotocol/graph-cli": "0.30.1",
     "prettier": "^2.6.2"
   }
 }
