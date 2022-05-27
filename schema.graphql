@@ -65,6 +65,9 @@ type Market @entity {
     underlyingPriceUSD: BigDecimal!
     "Underlying token decimal length"
     underlyingDecimals: Int!
+
+    borrowerCount: Int!
+    supplierCount: Int!
 }
 
 """
@@ -312,4 +315,17 @@ type RepayEvent implements UnderlyingTransfer @entity {
     underlyingSymbol: String!
     "Payer of the borrow funds"
     payer: String!
+}
+
+type User @entity {
+    " {borrow / supply}-{market ID}-{account address} "
+    id: ID!
+}
+
+type UsageDailySnapshot @entity {
+    " epoch days "
+    id: ID!
+
+    borrowCount: Int!
+    supplyCount: Int!
 }

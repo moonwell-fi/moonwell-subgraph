@@ -18,6 +18,7 @@ import {
   TransferEvent,
   BorrowEvent,
   RepayEvent,
+  User,
 } from '../generated/schema'
 
 import { createMarket, updateMarket } from './markets'
@@ -27,6 +28,7 @@ import {
   exponentToBigDecimal,
   cTokenDecimalsBD,
   cTokenDecimals,
+  getOrCreateUsageDailySnapshot,
 } from './helpers'
 
 /* Account supplies assets into market and receives cTokens in exchange
@@ -43,7 +45,8 @@ import {
  *    No need to update cTokenBalance, handleTransfer() will
  */
 export function handleMint(event: Mint): void {
-  let market = Market.load(event.address.toHexString())!
+  let marketID = event.address.toHexString()
+  let market = Market.load(marketID)!
   let mintID = event.transaction.hash
     .toHexString()
     .concat('-')
@@ -61,12 +64,28 @@ export function handleMint(event: Mint): void {
   let mint = new MintEvent(mintID)
   mint.amount = cTokenAmount
   mint.to = event.params.minter.toHexString()
-  mint.from = event.address.toHexString()
+  mint.from = marketID
   mint.blockNumber = event.block.number.toI32()
   mint.blockTime = event.block.timestamp.toI32()
   mint.cTokenSymbol = market.symbol
   mint.underlyingAmount = underlyingAmount
   mint.save()
+
+  let userID = 'supply'
+    .concat('-')
+    .concat(marketID)
+    .concat('-')
+    .concat(event.params.minter.toHexString())
+  if (!User.load(userID)) {
+    new User(userID).save()
+
+    market.supplierCount = market.supplierCount + 1
+    market.save()
+  }
+
+  let snapshot = getOrCreateUsageDailySnapshot(event.block.timestamp.toI32())
+  snapshot.supplyCount = snapshot.supplyCount + 1
+  snapshot.save()
 }
 
 /*  Account supplies cTokens into market and receives underlying asset in exchange
@@ -118,7 +137,8 @@ export function handleRedeem(event: Redeem): void {
  *    No need to updateMarket(), handleAccrueInterest() ALWAYS runs before this
  */
 export function handleBorrow(event: Borrow): void {
-  let market = Market.load(event.address.toHexString())!
+  let marketID = event.address.toHexString()
+  let market = Market.load(marketID)!
   let accountID = event.params.borrower.toHex()
   let account = Account.load(accountID)
   if (account == null) {
@@ -176,6 +196,18 @@ export function handleBorrow(event: Borrow): void {
   borrow.blockTime = event.block.timestamp.toI32()
   borrow.underlyingSymbol = market.underlyingSymbol
   borrow.save()
+
+  let userID = 'borrow'.concat('-').concat(marketID).concat('-').concat(accountID)
+  if (!User.load(userID)) {
+    new User(userID).save()
+
+    market.borrowerCount = market.borrowerCount + 1
+    market.save()
+  }
+
+  let snapshot = getOrCreateUsageDailySnapshot(event.block.timestamp.toI32())
+  snapshot.borrowCount = snapshot.borrowCount + 1
+  snapshot.save()
 }
 
 /* Repay some amount borrowed. Anyone can repay anyones balance

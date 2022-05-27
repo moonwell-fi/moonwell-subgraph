@@ -5,6 +5,7 @@ import {
   Account,
   AccountCTokenTransaction,
   Comptroller,
+  UsageDailySnapshot,
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 
@@ -42,6 +43,10 @@ export function convertSecondRateMantissaToAPY(rateMantissa: BigInt): BigDecimal
       .div(b.toBigDecimal())
       .minus(new BigDecimal(BigInt.fromI32(1))),
   )
+}
+
+function getEpochDays(blockTimestamp: i32): i32 {
+  return blockTimestamp / secondsPerDay
 }
 
 export function getOrCreateComptroller(): Comptroller {
@@ -90,6 +95,18 @@ export function getOrCreateComptroller(): Comptroller {
     }
   }
   return comptroller
+}
+
+export function getOrCreateUsageDailySnapshot(blockTimestamp: i32): UsageDailySnapshot {
+  let snapshotID = getEpochDays(blockTimestamp).toString()
+  let snapshot = UsageDailySnapshot.load(snapshotID)
+  if (!snapshot) {
+    snapshot = new UsageDailySnapshot(snapshotID)
+    snapshot.borrowCount = 0
+    snapshot.supplyCount = 0
+    snapshot.save()
+  }
+  return snapshot
 }
 
 export function createAccountCToken(
