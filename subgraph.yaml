@@ -15,7 +15,7 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
-      file: ./src/mappings/comptroller.ts
+      file: ./src/comptroller.ts
       entities:
         - Comptroller
         - Market
@@ -55,7 +55,7 @@ templates:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
-      file: ./src/mappings/ctoken.ts
+      file: ./src/ctoken.ts
       entities:
         - User
         - Market

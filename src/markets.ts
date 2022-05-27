@@ -1,8 +1,8 @@
 import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
-import { Market, Comptroller } from '../../generated/schema'
-import { PriceOracle2 } from '../../generated/templates/CToken/PriceOracle2'
-import { ERC20 } from '../../generated/templates/CToken/ERC20'
-import { CToken } from '../../generated/templates/CToken/CToken'
+import { Market, Comptroller } from '../generated/schema'
+import { PriceOracle2 } from '../generated/templates/CToken/PriceOracle2'
+import { ERC20 } from '../generated/templates/CToken/ERC20'
+import { CToken } from '../generated/templates/CToken/CToken'
 
 import {
   exponentToBigDecimal,

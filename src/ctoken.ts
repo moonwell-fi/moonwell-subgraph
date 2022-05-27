@@ -8,7 +8,7 @@ import {
   AccrueInterest,
   NewReserveFactor,
   NewMarketInterestRateModel,
-} from '../../generated/templates/CToken/CToken'
+} from '../generated/templates/CToken/CToken'
 import {
   Market,
   Account,
@@ -18,7 +18,7 @@ import {
   TransferEvent,
   BorrowEvent,
   RepayEvent,
-} from '../../generated/schema'
+} from '../generated/schema'
 
 import { createMarket, updateMarket } from './markets'
 import {

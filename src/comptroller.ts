@@ -7,10 +7,10 @@ import {
   NewMaxAssets,
   NewPriceOracle,
   MarketListed,
-} from '../../generated/Comptroller/Comptroller'
+} from '../generated/Comptroller/Comptroller'
 
-import { CToken } from '../../generated/templates'
-import { Market, Comptroller, Account } from '../../generated/schema'
+import { CToken } from '../generated/templates'
+import { Market, Comptroller, Account } from '../generated/schema'
 import { mantissaFactorBD, updateCommonCTokenStats, createAccount } from './helpers'
 import { createMarket } from './markets'
 import { log } from '@graphprotocol/graph-ts'
