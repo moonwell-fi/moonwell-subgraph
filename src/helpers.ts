@@ -69,7 +69,7 @@ export function updateCommonCTokenStats(
     logIndex,
   )
   cTokenStats.accrualBlockNumber = blockNumber
-  return cTokenStats as AccountCToken
+  return cTokenStats
 }
 
 export function getOrCreateAccountCTokenTransaction(
@@ -96,5 +96,5 @@ export function getOrCreateAccountCTokenTransaction(
     transaction.save()
   }
 
-  return transaction as AccountCTokenTransaction
+  return transaction
 }

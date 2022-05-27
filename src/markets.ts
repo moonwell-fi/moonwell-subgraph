@@ -180,5 +180,5 @@ export function updateMarket(marketAddress: Address, blockTimestamp: i32): Marke
     }
     market.save()
   }
-  return market as Market
+  return market
 }
