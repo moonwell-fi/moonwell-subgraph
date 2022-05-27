@@ -102,6 +102,8 @@ export function getOrCreateUsageDailySnapshot(blockTimestamp: i32): UsageDailySn
     snapshot.supplyCount = 0
     snapshot.borrowAmount = zeroBD
     snapshot.supplyAmount = zeroBD
+    snapshot.borrowAmountUSD = zeroBD
+    snapshot.supplyAmountUSD = zeroBD
     snapshot.save()
   }
   return snapshot

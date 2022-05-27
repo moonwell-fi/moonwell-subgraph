@@ -360,4 +360,6 @@ type UsageDailySnapshot @entity {
   supplyCount: Int!
   borrowAmount: BigDecimal!
   supplyAmount: BigDecimal!
+  borrowAmountUSD: BigDecimal!
+  supplyAmountUSD: BigDecimal!
 }
