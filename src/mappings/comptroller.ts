@@ -16,13 +16,10 @@ import { createMarket } from './markets'
 import { log } from '@graphprotocol/graph-ts'
 
 export function handleMarketListed(event: MarketListed): void {
-  // log.debug("test 1", ["hi"])
   // Dynamically index all new listed tokens
   CToken.create(event.params.cToken)
-  // log.debug("test 2", ["hi"])
   // Create the market for this token, since it's now been listed.
   let market = createMarket(event.params.cToken.toHexString())
-  // log.debug("test 3", ["hi"])
 
   market.save()
 }
