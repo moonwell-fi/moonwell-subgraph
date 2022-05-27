@@ -2,7 +2,7 @@ import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
 import { Market } from '../generated/schema'
 import { PriceOracle } from '../generated/templates/CToken/PriceOracle'
 import { ERC20 } from '../generated/templates/CToken/ERC20'
-import { CToken } from '../generated/templates/CToken/CToken'
+import { AccrueInterest, CToken } from '../generated/templates/CToken/CToken'
 
 import {
   exponentToBigDecimal,
@@ -100,7 +100,11 @@ function getETHinUSD(): BigDecimal {
   return ethPriceInUSD
 }
 
-export function updateMarket(marketAddress: Address, blockTimestamp: i32): Market {
+export function updateMarket(
+  marketAddress: Address,
+  blockTimestamp: i32,
+  event: AccrueInterest,
+): Market {
   let marketID = marketAddress.toHexString()
   let market = Market.load(marketID)
   if (market == null) {
@@ -135,23 +139,21 @@ export function updateMarket(marketAddress: Address, blockTimestamp: i32): Marke
       .times(cTokenDecimalsBD)
       .div(mantissaFactorBD)
       .truncate(mantissaFactor)
-    market.borrowIndex = contract.borrowIndex()
 
     market.reserves = contract
       .totalReserves()
       .toBigDecimal()
       .div(exponentToBigDecimal(market.underlyingDecimals))
       .truncate(market.underlyingDecimals)
-    market.totalBorrows = contract
-      .totalBorrows()
+    market.totalBorrows = event.params.totalBorrows
       .toBigDecimal()
       .div(exponentToBigDecimal(market.underlyingDecimals))
       .truncate(market.underlyingDecimals)
-    market.cash = contract
-      .getCash()
+    market.cash = event.params.cashPrior
       .toBigDecimal()
       .div(exponentToBigDecimal(market.underlyingDecimals))
       .truncate(market.underlyingDecimals)
+    market.borrowIndex = event.params.borrowIndex
 
     let borrowRatePerTimestampResult = contract.try_borrowRatePerTimestamp()
     if (borrowRatePerTimestampResult.reverted) {
