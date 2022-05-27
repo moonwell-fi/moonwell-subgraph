@@ -12,6 +12,7 @@ import {
   zeroBD,
   getOrCreateComptroller,
   convertSecondRateMantissaToAPY,
+  zeroBI,
 } from './helpers'
 
 let mMovrAddress = '0x6a1a771c7826596652dadc9145feaae62b1cd07f'
@@ -28,12 +29,13 @@ function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
         .div(exponentToBigDecimal(18 - underlyingDecimals + 18))
 }
 
-export function createMarket(marketAddress: string): Market {
-  let market = new Market(marketAddress)
-  let contract = CToken.bind(Address.fromString(marketAddress))
+export function createMarket(marketID: string): Market {
+  let market = new Market(marketID)
+  let marketAddress = Address.fromString(marketID)
+  let cTokenContract = CToken.bind(marketAddress)
 
   // MGlimmer doesn't have method `underlying` (unlike MErc20) therefore we handle it differently
-  if (marketAddress == mMovrAddress) {
+  if (marketID == mMovrAddress) {
     market.underlyingAddress = '0x0000000000000000000000000000000000000000'
     market.underlyingDecimals = 18
     market.underlyingPrice = BigDecimal.fromString('1')
@@ -41,8 +43,8 @@ export function createMarket(marketAddress: string): Market {
     market.underlyingSymbol = 'MOVR'
     market.underlyingPriceUSD = zeroBD
   } else {
-    let underlyingContract = ERC20.bind(contract.underlying())
-    market.underlyingAddress = contract.underlying().toHexString()
+    let underlyingContract = ERC20.bind(cTokenContract.underlying())
+    market.underlyingAddress = cTokenContract.underlying().toHexString()
     market.underlyingDecimals = underlyingContract.decimals()
     market.underlyingName = underlyingContract.name()
     market.underlyingSymbol = underlyingContract.symbol()
@@ -50,8 +52,8 @@ export function createMarket(marketAddress: string): Market {
     market.underlyingPrice = zeroBD
   }
 
-  let interestRateModelAddress = contract.try_interestRateModel()
-  let reserveFactor = contract.try_reserveFactorMantissa()
+  let interestRateModelAddress = cTokenContract.try_interestRateModel()
+  let reserveFactor = cTokenContract.try_reserveFactorMantissa()
 
   market.borrowRate = zeroBD
   market.cash = zeroBD
@@ -60,17 +62,26 @@ export function createMarket(marketAddress: string): Market {
   market.interestRateModelAddress = interestRateModelAddress.reverted
     ? '0x0000000000000000000000000000000000000000'
     : interestRateModelAddress.value.toHexString()
-  market.name = contract.name()
+  market.name = cTokenContract.name()
   market.reserves = zeroBD
   market.supplyRate = zeroBD
-  market.symbol = contract.symbol()
+  market.symbol = cTokenContract.symbol()
   market.totalBorrows = zeroBD
   market.totalSupply = zeroBD
 
+  market.borrowIndex = zeroBI
+  market.borrowRewardSpeedNative = zeroBI
+  market.borrowRewardSpeedProtocol = zeroBI
+  market.supplyRewardSpeedNative = zeroBI
+  market.supplyRewardSpeedProtocol = zeroBI
+  market.reserveFactor = reserveFactor.reverted ? BigInt.fromI32(0) : reserveFactor.value
+  market.borrowRewardSpeedNative = zeroBI
+  market.borrowRewardSpeedProtocol = zeroBI
+  market.supplyRewardSpeedNative = zeroBI
+  market.supplyRewardSpeedProtocol = zeroBI
+
   market.accrualBlockTimestamp = 0
   market.blockTimestamp = 0
-  market.borrowIndex = zeroBD
-  market.reserveFactor = reserveFactor.reverted ? BigInt.fromI32(0) : reserveFactor.value
 
   return market
 }
@@ -97,8 +108,7 @@ export function updateMarket(marketAddress: Address, blockTimestamp: i32): Marke
 
   // Only updateMarket if it has not been updated this block
   if (market.accrualBlockTimestamp != blockTimestamp) {
-    let contractAddress = Address.fromString(market.id)
-    let contract = CToken.bind(contractAddress)
+    let contract = CToken.bind(marketAddress)
 
     let ethPriceInUSD = getETHinUSD()
 
@@ -106,7 +116,7 @@ export function updateMarket(marketAddress: Address, blockTimestamp: i32): Marke
     if (market.id == mMovrAddress) {
       market.underlyingPriceUSD = ethPriceInUSD.truncate(market.underlyingDecimals)
     } else {
-      let tokenPriceUSD = getTokenPrice(contractAddress, market.underlyingDecimals)
+      let tokenPriceUSD = getTokenPrice(marketAddress, market.underlyingDecimals)
       market.underlyingPrice = tokenPriceUSD
         .div(ethPriceInUSD)
         .truncate(market.underlyingDecimals)
@@ -124,11 +134,7 @@ export function updateMarket(marketAddress: Address, blockTimestamp: i32): Marke
       .times(cTokenDecimalsBD)
       .div(mantissaFactorBD)
       .truncate(mantissaFactor)
-    market.borrowIndex = contract
-      .borrowIndex()
-      .toBigDecimal()
-      .div(mantissaFactorBD)
-      .truncate(mantissaFactor)
+    market.borrowIndex = contract.borrowIndex()
 
     market.reserves = contract
       .totalReserves()

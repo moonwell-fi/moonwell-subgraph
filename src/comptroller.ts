@@ -1,3 +1,4 @@
+import { log } from '@graphprotocol/graph-ts'
 import {
   MarketEntered,
   MarketExited,
@@ -6,6 +7,8 @@ import {
   NewLiquidationIncentive,
   NewPriceOracle,
   MarketListed,
+  SupplyRewardSpeedUpdated,
+  BorrowRewardSpeedUpdated,
 } from '../generated/Comptroller/Comptroller'
 
 import { CToken } from '../generated/templates'
@@ -15,6 +18,8 @@ import {
   updateCommonCTokenStats,
   createAccount,
   getOrCreateComptroller,
+  Mfam,
+  Movr,
 } from './helpers'
 import { createMarket } from './markets'
 
@@ -104,4 +109,40 @@ export function handleNewPriceOracle(event: NewPriceOracle): void {
   let comptroller = getOrCreateComptroller()
   comptroller.priceOracle = event.params.newPriceOracle.toHexString()
   comptroller.save()
+}
+
+export function handleSupplyRewardSpeedUpdated(event: SupplyRewardSpeedUpdated): void {
+  let marketID = event.params.mToken.toHexString()
+  let market = Market.load(marketID)
+  if (!market) {
+    log.warning('[handleSupplyRewardSpeedUpdated] market {} not found', [marketID])
+    return
+  }
+
+  let rewardType = event.params.rewardToken
+  let newSpeed = event.params.newSupplyRewardSpeed
+  if (rewardType == Mfam) {
+    market.supplyRewardSpeedProtocol = newSpeed
+  } else if (rewardType == Movr) {
+    market.supplyRewardSpeedNative = newSpeed
+  }
+  market.save()
+}
+
+export function handleBorrowRewardSpeedUpdated(event: BorrowRewardSpeedUpdated): void {
+  let marketID = event.params.mToken.toHexString()
+  let market = Market.load(marketID)
+  if (!market) {
+    log.warning('[handleBorrowRewardSpeedUpdated] market {} not found', [marketID])
+    return
+  }
+
+  let rewardType = event.params.rewardToken
+  let newSpeed = event.params.newBorrowRewardSpeed
+  if (rewardType == Mfam) {
+    market.borrowRewardSpeedProtocol = newSpeed
+  } else if (rewardType == Movr) {
+    market.borrowRewardSpeedNative = newSpeed
+  }
+  market.save()
 }

@@ -9,13 +9,17 @@ import {
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 
-let comptrollerAddr = Address.fromString('0x0b7a0EAA884849c6Af7a129e899536dDDcA4905E')
+export let comptrollerAddr = Address.fromString(
+  '0x0b7a0EAA884849c6Af7a129e899536dDDcA4905E',
+)
+export let Mfam = 0
+export let Movr = 1
 export let mantissaFactor = 18
 export let cTokenDecimals = 8
 export let mantissaFactorBD: BigDecimal = exponentToBigDecimal(18)
 export let cTokenDecimalsBD: BigDecimal = exponentToBigDecimal(8)
-export let zeroBD = BigDecimal.fromString('0')
-let zeroBI = BigInt.fromI32(0)
+export let zeroBD = BigDecimal.zero()
+export let zeroBI = BigInt.zero()
 let secondsPerDay = 24 * 60 * 60
 let daysPerYear = 365 as u8
 let mantissaFactorBI = BigInt.fromI32(10).pow(18)
@@ -115,7 +119,7 @@ export function createAccountCToken(
   cTokenStats.cTokenBalance = zeroBD
   cTokenStats.totalUnderlyingSupplied = zeroBD
   cTokenStats.totalUnderlyingRedeemed = zeroBD
-  cTokenStats.accountBorrowIndex = zeroBD
+  cTokenStats.accountBorrowIndex = zeroBI
   cTokenStats.totalUnderlyingBorrowed = zeroBD
   cTokenStats.totalUnderlyingRepaid = zeroBD
   cTokenStats.storedBorrowBalance = zeroBD

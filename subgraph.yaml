@@ -43,6 +43,10 @@ dataSources:
           handler: handleNewLiquidationIncentive
         - event: NewPriceOracle(address,address)
           handler: handleNewPriceOracle
+        - event: SupplyRewardSpeedUpdated(uint8,indexed address,uint256)
+          handler: handleSupplyRewardSpeedUpdated
+        - event: BorrowRewardSpeedUpdated(uint8,indexed address,uint256)
+          handler: handleBorrowRewardSpeedUpdated
 templates:
   - name: CToken
     kind: ethereum/contract
@@ -57,7 +61,6 @@ templates:
       entities:
         - User
         - Market
-        - CTokenInfo
       abis:
         - name: CToken
           file: ./abis/ctoken.json

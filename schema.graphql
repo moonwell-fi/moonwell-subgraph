@@ -68,7 +68,19 @@ type Market @entity {
   exchangeRate: BigDecimal!
 
   "The history of the markets borrow index return (Think S&P 500)"
-  borrowIndex: BigDecimal!
+  borrowIndex: BigInt!
+
+  "comptroller.borrowRewardSpeeds(MOVR, MTOKEN)"
+  borrowRewardSpeedNative: BigInt!
+
+  "comptroller.borrowRewardSpeeds(MFAM, MTOKEN)"
+  borrowRewardSpeedProtocol: BigInt!
+
+  "comptroller.supplyRewardSpeeds(MOVR, MTOKEN)"
+  supplyRewardSpeedNative: BigInt!
+
+  "comptroller.supplyRewardSpeeds(MFAM, MTOKEN)"
+  supplyRewardSpeedProtocol: BigInt!
 
   "The factor determining interest that goes to reserves"
   reserveFactor: BigInt!
@@ -130,7 +142,7 @@ type AccountCToken @entity {
   "Total amount of underling redeemed"
   totalUnderlyingRedeemed: BigDecimal!
   "The value of the borrow index upon users last interaction"
-  accountBorrowIndex: BigDecimal!
+  accountBorrowIndex: BigInt!
   "Total amount underlying borrowed, exclusive of interest"
   totalUnderlyingBorrowed: BigDecimal!
   "Total amount underlying repaid"
