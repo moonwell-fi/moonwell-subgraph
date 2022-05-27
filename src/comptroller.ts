@@ -9,6 +9,7 @@ import {
   MarketListed,
   SupplyRewardSpeedUpdated,
   BorrowRewardSpeedUpdated,
+  NewBorrowCap,
 } from '../generated/Comptroller/Comptroller'
 
 import { CToken } from '../generated/templates'
@@ -144,5 +145,17 @@ export function handleBorrowRewardSpeedUpdated(event: BorrowRewardSpeedUpdated):
   } else if (rewardType == Movr) {
     market.borrowRewardSpeedNative = newSpeed
   }
+  market.save()
+}
+
+export function handleNewBorrowCap(event: NewBorrowCap): void {
+  let marketID = event.params.mToken.toHexString()
+  let market = Market.load(marketID)
+  if (!market) {
+    log.warning('[handleNewBorrowCap] market {} not found', [marketID])
+    return
+  }
+
+  market.borrowCap = event.params.newBorrowCap
   market.save()
 }

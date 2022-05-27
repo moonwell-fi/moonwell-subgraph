@@ -47,6 +47,8 @@ dataSources:
           handler: handleSupplyRewardSpeedUpdated
         - event: BorrowRewardSpeedUpdated(uint8,indexed address,uint256)
           handler: handleBorrowRewardSpeedUpdated
+        - event: NewBorrowCap(indexed address,uint256)
+          handler: handleNewBorrowCap
 templates:
   - name: CToken
     kind: ethereum/contract

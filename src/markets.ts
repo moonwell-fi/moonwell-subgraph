@@ -79,6 +79,7 @@ export function createMarket(marketID: string): Market {
   market.borrowRewardSpeedProtocol = zeroBI
   market.supplyRewardSpeedNative = zeroBI
   market.supplyRewardSpeedProtocol = zeroBI
+  market.borrowCap = zeroBI
 
   market.accrualBlockTimestamp = 0
   market.blockTimestamp = 0
