@@ -1,5 +1,3 @@
-/* eslint-disable prefer-const */ // to satisfy AS compiler
-
 import {
   MarketEntered,
   MarketExited,
@@ -9,10 +7,10 @@ import {
   NewMaxAssets,
   NewPriceOracle,
   MarketListed,
-} from '../types/Comptroller/Comptroller'
+} from '../../generated/Comptroller/Comptroller'
 
-import { CToken } from '../types/templates'
-import { Market, Comptroller, Account } from '../types/schema'
+import { CToken } from '../../generated/templates'
+import { Market, Comptroller, Account } from '../../generated/schema'
 import { mantissaFactorBD, updateCommonCTokenStats, createAccount } from './helpers'
 import { createMarket } from './markets'
 import { log } from '@graphprotocol/graph-ts'
@@ -106,13 +104,13 @@ export function handleNewCollateralFactor(event: NewCollateralFactor): void {
 
 // This should be the first event acccording to etherscan but it isn't.... price oracle is. weird
 export function handleNewLiquidationIncentive(event: NewLiquidationIncentive): void {
-  let comptroller = Comptroller.load('1')
+  let comptroller = Comptroller.load('1')!
   comptroller.liquidationIncentive = event.params.newLiquidationIncentiveMantissa
   comptroller.save()
 }
 
 export function handleNewMaxAssets(event: NewMaxAssets): void {
-  let comptroller = Comptroller.load('1')
+  let comptroller = Comptroller.load('1')!
   comptroller.maxAssets = event.params.newMaxAssets
   comptroller.save()
 }
@@ -123,6 +121,6 @@ export function handleNewPriceOracle(event: NewPriceOracle): void {
   if (comptroller == null) {
     comptroller = new Comptroller('1')
   }
-  comptroller.priceOracle = event.params.newPriceOracle
+  comptroller.priceOracle = event.params.newPriceOracle.toHexString()
   comptroller.save()
 }

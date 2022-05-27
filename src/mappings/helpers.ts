@@ -1,8 +1,6 @@
-/* eslint-disable prefer-const */ // to satisfy AS compiler
-
 // For each division by 10, add one to exponent to truncate one significant figure
 import { BigDecimal, BigInt, Bytes, Address } from '@graphprotocol/graph-ts'
-import { AccountCToken, Account, AccountCTokenTransaction } from '../types/schema'
+import { AccountCToken, Account, AccountCTokenTransaction } from '../../generated/schema'
 
 export function exponentToBigDecimal(decimals: i32): BigDecimal {
   let bd = BigDecimal.fromString('1')
@@ -91,7 +89,7 @@ export function getOrCreateAccountCTokenTransaction(
   if (transaction == null) {
     transaction = new AccountCTokenTransaction(id)
     transaction.account = accountID
-    transaction.tx_hash = tx_hash
+    transaction.tx_hash = tx_hash.toHexString()
     transaction.timestamp = timestamp
     transaction.block = block
     transaction.logIndex = logIndex
