@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
-import { Market, Comptroller } from '../generated/schema'
+import { Market } from '../generated/schema'
 import { PriceOracle2 } from '../generated/templates/CToken/PriceOracle2'
 import { ERC20 } from '../generated/templates/CToken/ERC20'
 import { CToken } from '../generated/templates/CToken/CToken'
@@ -10,13 +10,14 @@ import {
   mantissaFactorBD,
   cTokenDecimalsBD,
   zeroBD,
+  getOrCreateComptroller,
 } from './helpers'
 
 let mMovrAddress = '0x6a1a771c7826596652dadc9145feaae62b1cd07f'
 
 function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
-  let comptroller = Comptroller.load('1')!
-  let oracle = PriceOracle2.bind(Address.fromString(comptroller.priceOracle!))
+  let comptroller = getOrCreateComptroller()
+  let oracle = PriceOracle2.bind(Address.fromString(comptroller.priceOracle))
   let tryPrice = oracle.try_getUnderlyingPrice(token)
 
   return tryPrice.reverted
@@ -74,8 +75,8 @@ export function createMarket(marketAddress: string): Market {
 }
 
 function getETHinUSD(): BigDecimal {
-  let comptroller = Comptroller.load('1')!
-  let oracleAddress = Address.fromString(comptroller.priceOracle!)
+  let comptroller = getOrCreateComptroller()
+  let oracleAddress = Address.fromString(comptroller.priceOracle)
   let oracle = PriceOracle2.bind(oracleAddress)
   let tryPrice = oracle.try_getUnderlyingPrice(Address.fromString(mMovrAddress))
 

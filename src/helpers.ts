@@ -1,6 +1,26 @@
 // For each division by 10, add one to exponent to truncate one significant figure
-import { BigDecimal, BigInt, Bytes, Address } from '@graphprotocol/graph-ts'
-import { AccountCToken, Account, AccountCTokenTransaction } from '../generated/schema'
+import {
+  Address,
+  BigDecimal,
+  BigInt,
+  Bytes,
+  log,
+} from '@graphprotocol/graph-ts'
+import {
+  AccountCToken,
+  Account,
+  AccountCTokenTransaction,
+  Comptroller,
+} from '../generated/schema'
+import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
+
+let comptrollerAddr = Address.fromString('0x0b7a0EAA884849c6Af7a129e899536dDDcA4905E')
+export let mantissaFactor = 18
+export let cTokenDecimals = 8
+export let mantissaFactorBD: BigDecimal = exponentToBigDecimal(18)
+export let cTokenDecimalsBD: BigDecimal = exponentToBigDecimal(8)
+export let zeroBD = BigDecimal.fromString('0')
+let zeroBI = BigInt.fromI32(0)
 
 export function exponentToBigDecimal(decimals: i32): BigDecimal {
   let bd = BigDecimal.fromString('1')
@@ -10,11 +30,53 @@ export function exponentToBigDecimal(decimals: i32): BigDecimal {
   return bd
 }
 
-export let mantissaFactor = 18
-export let cTokenDecimals = 8
-export let mantissaFactorBD: BigDecimal = exponentToBigDecimal(18)
-export let cTokenDecimalsBD: BigDecimal = exponentToBigDecimal(8)
-export let zeroBD = BigDecimal.fromString('0')
+export function getOrCreateComptroller(): Comptroller {
+  let comptroller = Comptroller.load('1')
+  if (!comptroller) {
+    comptroller = new Comptroller('1')
+    let contract = ComptrollerContract.bind(comptrollerAddr)
+
+    let oracleResult = contract.try_oracle()
+    if (oracleResult.reverted) {
+      log.warning('[getOrCreateComptroller] try_oracle reverted', [])
+      comptroller.priceOracle = '0x0000000000000000000000000000000000000000'
+    } else {
+      comptroller.priceOracle = oracleResult.value.toHexString()
+    }
+
+    let liquidationIncentiveMantissaResult = contract.try_liquidationIncentiveMantissa()
+    if (liquidationIncentiveMantissaResult.reverted) {
+      log.warning(
+        '[getOrCreateComptroller] try_liquidationIncentiveMantissa reverted',
+        [],
+      )
+      comptroller.liquidationIncentive = zeroBD
+    } else {
+      comptroller.liquidationIncentive = liquidationIncentiveMantissaResult.value
+        .toBigDecimal()
+        .div(mantissaFactorBD)
+    }
+
+    let closeFactorMantissaResult = contract.try_closeFactorMantissa()
+    if (closeFactorMantissaResult.reverted) {
+      log.warning('[getOrCreateComptroller] try_closeFactorMantissa reverted', [])
+      comptroller.closeFactor = zeroBD
+    } else {
+      comptroller.closeFactor = closeFactorMantissaResult.value
+        .toBigDecimal()
+        .div(mantissaFactorBD)
+    }
+
+    let maxAssetsResult = contract.try_maxAssets()
+    if (maxAssetsResult.reverted) {
+      log.warning('[getOrCreateComptroller] try_maxAssets reverted', [])
+      comptroller.maxAssets = zeroBI
+    } else {
+      comptroller.maxAssets = maxAssetsResult.value
+    }
+  }
+  return comptroller
+}
 
 export function createAccountCToken(
   cTokenStatsID: string,

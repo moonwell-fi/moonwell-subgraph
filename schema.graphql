@@ -4,14 +4,14 @@ The Comptroller type has protocol level variables stored
 type Comptroller @entity {
     "ID is set to 1"
     id: ID!
-    "Address of price oracle the comptroller uses"
-    priceOracle: String
-    "Factor used to determine repayAmount for liquidating"
-    closeFactor: BigInt
-    "The percent bonus liquidators get for liquidating"
-    liquidationIncentive: BigInt
-    "Max assets a single user can enter"
-    maxAssets: BigInt
+    "Oracle which gives the price of any given asset"
+    priceOracle: String!
+    "The percent, ranging from 0% to 100%, of a liquidatable account's borrow that can be repaid in a single liquidate transaction"
+    closeFactor: BigDecimal!
+    "The percent bonus liquidators get for liquidating. If the liquidation incentive is 1.1, liquidators receive an extra 10% of the borrowers collateral for every unit they close."
+    liquidationIncentive: BigDecimal!
+    "Max assets a single user can enter (borrow or use as collateral)"
+    maxAssets: BigInt!
 }
 
 """
