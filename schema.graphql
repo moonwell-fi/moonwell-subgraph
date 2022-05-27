@@ -10,8 +10,6 @@ type Comptroller @entity {
   closeFactor: BigDecimal!
   "The percent bonus liquidators get for liquidating. If the liquidation incentive is 1.1, liquidators receive an extra 10% of the borrowers collateral for every unit they close."
   liquidationIncentive: BigDecimal!
-  "Max assets a single user can enter (borrow or use as collateral)"
-  maxAssets: BigInt!
 }
 
 """

@@ -85,14 +85,6 @@ export function getOrCreateComptroller(): Comptroller {
         .toBigDecimal()
         .div(mantissaFactorBD)
     }
-
-    let maxAssetsResult = contract.try_maxAssets()
-    if (maxAssetsResult.reverted) {
-      log.warning('[getOrCreateComptroller] try_maxAssets reverted', [])
-      comptroller.maxAssets = zeroBI
-    } else {
-      comptroller.maxAssets = maxAssetsResult.value
-    }
   }
   return comptroller
 }

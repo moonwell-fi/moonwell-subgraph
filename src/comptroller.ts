@@ -4,7 +4,6 @@ import {
   NewCloseFactor,
   NewCollateralFactor,
   NewLiquidationIncentive,
-  NewMaxAssets,
   NewPriceOracle,
   MarketListed,
 } from '../generated/Comptroller/Comptroller'
@@ -21,15 +20,15 @@ import { createMarket } from './markets'
 
 export function handleMarketListed(event: MarketListed): void {
   // Dynamically index all new listed tokens
-  CToken.create(event.params.cToken)
+  CToken.create(event.params.mToken)
   // Create the market for this token, since it's now been listed.
-  let market = createMarket(event.params.cToken.toHexString())
+  let market = createMarket(event.params.mToken.toHexString())
 
   market.save()
 }
 
 export function handleMarketEntered(event: MarketEntered): void {
-  let market = Market.load(event.params.cToken.toHexString())
+  let market = Market.load(event.params.mToken.toHexString())
   if (market != null) {
     let accountID = event.params.account.toHex()
     let account = Account.load(accountID)
@@ -52,7 +51,7 @@ export function handleMarketEntered(event: MarketEntered): void {
 }
 
 export function handleMarketExited(event: MarketExited): void {
-  let market = Market.load(event.params.cToken.toHexString())
+  let market = Market.load(event.params.mToken.toHexString())
   if (market != null) {
     let accountID = event.params.account.toHex()
     let account = Account.load(accountID)
@@ -83,7 +82,7 @@ export function handleNewCloseFactor(event: NewCloseFactor): void {
 }
 
 export function handleNewCollateralFactor(event: NewCollateralFactor): void {
-  let market = Market.load(event.params.cToken.toHexString())
+  let market = Market.load(event.params.mToken.toHexString())
   if (market != null) {
     market.collateralFactor = event.params.newCollateralFactorMantissa
       .toBigDecimal()
@@ -98,12 +97,6 @@ export function handleNewLiquidationIncentive(event: NewLiquidationIncentive): v
   comptroller.liquidationIncentive = event.params.newLiquidationIncentiveMantissa
     .toBigDecimal()
     .div(mantissaFactorBD)
-  comptroller.save()
-}
-
-export function handleNewMaxAssets(event: NewMaxAssets): void {
-  let comptroller = getOrCreateComptroller()
-  comptroller.maxAssets = event.params.newMaxAssets
   comptroller.save()
 }
 

@@ -288,7 +288,7 @@ export function handleRepayBorrow(event: RepayBorrow): void {
  * Liquidate an account who has fell below the collateral factor.
  *
  * event.params.borrower - the borrower who is getting liquidated of their cTokens
- * event.params.cTokenCollateral - the market ADDRESS of the ctoken being liquidated
+ * event.params.mTokenCollateral - the market ADDRESS of the ctoken being liquidated
  * event.params.liquidator - the liquidator
  * event.params.repayAmount - the amount of underlying to be repaid
  * event.params.seizeTokens - cTokens seized (transfer event should handle this)
@@ -322,7 +322,7 @@ export function handleLiquidateBorrow(event: LiquidateBorrow): void {
   // the underwater borrower. So we must get that address from the event, and
   // the repay token is the event.address
   let marketRepayToken = Market.load(event.address.toHexString())!
-  let marketCTokenLiquidated = Market.load(event.params.qiTokenCollateral.toHexString())!
+  let marketCTokenLiquidated = Market.load(event.params.mTokenCollateral.toHexString())!
   let mintID = event.transaction.hash
     .toHexString()
     .concat('-')

@@ -1,10 +1,104 @@
 [
   {
+    "inputs": [{ "internalType": "string", "name": "_nativeToken", "type": "string" }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "feed",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "symbol",
+        "type": "string"
+      }
+    ],
+    "name": "FeedSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldAdmin",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAdmin",
+        "type": "address"
+      }
+    ],
+    "name": "NewAdmin",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "asset",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "previousPriceMantissa",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "requestedPriceMantissa",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newPriceMantissa",
+        "type": "uint256"
+      }
+    ],
+    "name": "PricePosted",
+    "type": "event"
+  },
+  {
     "constant": true,
     "inputs": [],
-    "name": "cEthAddress",
+    "name": "admin",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [{ "internalType": "address", "name": "asset", "type": "address" }],
+    "name": "assetPrices",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [{ "internalType": "string", "name": "symbol", "type": "string" }],
+    "name": "getFeed",
     "outputs": [
       {
+        "internalType": "contract AggregatorV2V3Interface",
         "name": "",
         "type": "address"
       }
@@ -15,14 +109,11 @@
   },
   {
     "constant": true,
-    "inputs": [],
-    "name": "comptroller",
-    "outputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
+    "inputs": [
+      { "internalType": "contract MToken", "name": "mToken", "type": "address" }
     ],
+    "name": "getUnderlyingPrice",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -31,12 +122,7 @@
     "constant": true,
     "inputs": [],
     "name": "isPriceOracle",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -44,103 +130,63 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "makerUsdOracleKey",
-    "outputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
-    ],
+    "name": "nativeToken",
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": true,
-    "inputs": [],
-    "name": "cDaiAddress",
-    "outputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
-    ],
+    "constant": false,
+    "inputs": [{ "internalType": "address", "name": "newAdmin", "type": "address" }],
+    "name": "setAdmin",
+    "outputs": [],
     "payable": false,
-    "stateMutability": "view",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": true,
+    "constant": false,
+    "inputs": [
+      { "internalType": "address", "name": "asset", "type": "address" },
+      { "internalType": "uint256", "name": "price", "type": "uint256" }
+    ],
+    "name": "setDirectPrice",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      { "internalType": "string", "name": "symbol", "type": "string" },
+      { "internalType": "address", "name": "feed", "type": "address" }
+    ],
+    "name": "setFeed",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
     "inputs": [
       {
-        "name": "cToken",
+        "internalType": "contract MToken",
+        "name": "mToken",
         "type": "address"
-      }
-    ],
-    "name": "getUnderlyingPrice",
-    "outputs": [
+      },
       {
-        "name": "",
+        "internalType": "uint256",
+        "name": "underlyingPriceMantissa",
         "type": "uint256"
       }
     ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "v1PriceOracle",
-    "outputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "cUsdcAddress",
-    "outputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "name": "comptroller_",
-        "type": "address"
-      },
-      {
-        "name": "v1PriceOracle_",
-        "type": "address"
-      },
-      {
-        "name": "cEthAddress_",
-        "type": "address"
-      },
-      {
-        "name": "cUsdcAddress_",
-        "type": "address"
-      },
-      {
-        "name": "cDaiAddress_",
-        "type": "address"
-      }
-    ],
+    "name": "setUnderlyingPrice",
+    "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
-    "type": "constructor"
+    "type": "function"
   }
 ]
