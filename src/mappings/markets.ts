@@ -1,8 +1,6 @@
 // For each division by 10, add one to exponent to truncate one significant figure
 import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
 import { Market, Comptroller } from '../../generated/schema'
-// PriceOracle is valid from Comptroller deployment until block 8498421
-import { PriceOracle } from '../../generated/templates/CToken/PriceOracle'
 // PriceOracle2 is valid from 8498422 until present block (until another proxy upgrade)
 import { PriceOracle2 } from '../../generated/templates/CToken/PriceOracle2'
 import { ERC20 } from '../../generated/templates/CToken/ERC20'
@@ -16,17 +14,10 @@ import {
   zeroBD,
 } from './helpers'
 
-// let cUSDCAddress = '0xd0670AEe3698F66e2D4dAf071EB9c690d978BFA8'
-let qiAvaxAddress = '0x6a1a771c7826596652dadc9145feaae62b1cd07f'
-// let daiAddress = '0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359'
+let mMovrAddress = '0x6a1a771c7826596652dadc9145feaae62b1cd07f'
 
 // Used for all cERC20 contracts
-function getTokenPrice(
-  blockNumber: i32,
-  eventAddress: Address,
-  underlyingAddress: Address,
-  underlyingDecimals: i32,
-): BigDecimal {
+function getTokenPrice(eventAddress: Address, underlyingDecimals: i32): BigDecimal {
   let comptroller = Comptroller.load('1')!
   let oracleAddress = Address.fromString(comptroller.priceOracle!)
   let underlyingPrice: BigDecimal
@@ -67,68 +58,28 @@ function getTokenPrice(
   return underlyingPrice
 }
 
-/*// Returns the price of USDC in eth. i.e. 0.005 would mean ETH is $200
-function getUSDCpriceETH(blockNumber: i32): BigDecimal {
-  let comptroller = Comptroller.load('1')
-  let oracleAddress = comptroller.priceOracle as Address
-  let priceOracle1Address = Address.fromString('02557a5e05defeffd4cae6d83ea3d173b272c904')
-  let USDCAddress = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48 '
-  let usdPrice: BigDecimal
-
-  // See notes on block number if statement in getTokenPrices()
-  if (blockNumber > 7715908) {
-    let oracle2 = PriceOracle2.bind(oracleAddress)
-    let mantissaDecimalFactorUSDC = 18 - 6 + 18
-    let bdFactorUSDC = exponentToBigDecimal(mantissaDecimalFactorUSDC)
-    let tryPrice = oracle2.try_getUnderlyingPrice(Address.fromString(cUSDCAddress))
-
-    usdPrice = tryPrice.reverted
-      ? zeroBD
-      : tryPrice.value.toBigDecimal().div(bdFactorUSDC)
-  } else {
-    let oracle1 = PriceOracle.bind(priceOracle1Address)
-    usdPrice = oracle1
-      .getPrice(Address.fromString(USDCAddress))
-      .toBigDecimal()
-      .div(mantissaFactorBD)
-  }
-  return usdPrice
-}*/
-
 export function createMarket(marketAddress: string): Market {
   let market: Market
   let contract = CToken.bind(Address.fromString(marketAddress))
-  // log.debug("test 4 = " + marketAddress, ["hi"])
 
   // It is CETH, which has a slightly different interface
-  if (marketAddress == qiAvaxAddress) {
-    // log.debug("test 5", ["hi"])
+  if (marketAddress == mMovrAddress) {
     market = new Market(marketAddress)
-    ;(market.underlyingAddress = '0x0000000000000000000000000000000000000000'),
-      (market.underlyingDecimals = 18)
+    market.underlyingAddress = '0x0000000000000000000000000000000000000000'
+    market.underlyingDecimals = 18
     market.underlyingPrice = BigDecimal.fromString('1')
     market.underlyingName = 'MOVR'
     market.underlyingSymbol = 'MOVR'
     market.underlyingPriceUSD = zeroBD
-    // It is all other CERC20 contracts
   } else {
-    // log.debug("test 6", ["hi"])
     market = new Market(marketAddress)
     let underlyingContract = ERC20.bind(contract.underlying())
     market.underlyingAddress = contract.underlying().toHexString()
     market.underlyingDecimals = underlyingContract.decimals()
-    // if (market.underlyingAddress.toHexString() != daiAddress) {
     market.underlyingName = underlyingContract.name()
     market.underlyingSymbol = underlyingContract.symbol()
-    // } else {
-    //   market.underlyingName = 'Dai Stablecoin v1.0 (DAI)'
-    //   market.underlyingSymbol = 'DAI'
-    // }
     market.underlyingPriceUSD = zeroBD
     market.underlyingPrice = zeroBD
-    // if (marketAddress == cUSDCAddress) {
-    //   market.underlyingPriceUSD = BigDecimal.fromString('1')
-    // }
   }
 
   let interestRateModelAddress = contract.try_interestRateModel()
@@ -157,11 +108,11 @@ export function createMarket(marketAddress: string): Market {
 }
 
 // Only to be used after block 10678764, since it's aimed to fix the change to USD based price oracle.
-function getETHinUSD(blockNumber: i32): BigDecimal {
+function getETHinUSD(): BigDecimal {
   let comptroller = Comptroller.load('1')!
   let oracleAddress = Address.fromString(comptroller.priceOracle!)
   let oracle = PriceOracle2.bind(oracleAddress)
-  let tryPrice = oracle.try_getUnderlyingPrice(Address.fromString(qiAvaxAddress))
+  let tryPrice = oracle.try_getUnderlyingPrice(Address.fromString(mMovrAddress))
 
   let ethPriceInUSD = tryPrice.reverted
     ? zeroBD
@@ -186,18 +137,13 @@ export function updateMarket(
     let contractAddress = Address.fromString(market.id)
     let contract = CToken.bind(contractAddress)
 
-    let ethPriceInUSD = getETHinUSD(blockNumber)
+    let ethPriceInUSD = getETHinUSD()
 
     // if cETH, we only update USD price
-    if (market.id == qiAvaxAddress) {
+    if (market.id == mMovrAddress) {
       market.underlyingPriceUSD = ethPriceInUSD.truncate(market.underlyingDecimals)
     } else {
-      let tokenPriceUSD = getTokenPrice(
-        blockNumber,
-        contractAddress,
-        Address.fromString(market.underlyingAddress),
-        market.underlyingDecimals,
-      )
+      let tokenPriceUSD = getTokenPrice(contractAddress, market.underlyingDecimals)
       market.underlyingPrice = tokenPriceUSD
         .div(ethPriceInUSD)
         .truncate(market.underlyingDecimals)
