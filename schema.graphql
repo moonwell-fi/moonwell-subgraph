@@ -2,72 +2,90 @@
 The Comptroller type has protocol level variables stored
 """
 type Comptroller @entity {
-    "ID is set to 1"
-    id: ID!
-    "Oracle which gives the price of any given asset"
-    priceOracle: String!
-    "The percent, ranging from 0% to 100%, of a liquidatable account's borrow that can be repaid in a single liquidate transaction"
-    closeFactor: BigDecimal!
-    "The percent bonus liquidators get for liquidating. If the liquidation incentive is 1.1, liquidators receive an extra 10% of the borrowers collateral for every unit they close."
-    liquidationIncentive: BigDecimal!
-    "Max assets a single user can enter (borrow or use as collateral)"
-    maxAssets: BigInt!
+  "ID is set to 1"
+  id: ID!
+  "Oracle which gives the price of any given asset"
+  priceOracle: String!
+  "The percent, ranging from 0% to 100%, of a liquidatable account's borrow that can be repaid in a single liquidate transaction"
+  closeFactor: BigDecimal!
+  "The percent bonus liquidators get for liquidating. If the liquidation incentive is 1.1, liquidators receive an extra 10% of the borrowers collateral for every unit they close."
+  liquidationIncentive: BigDecimal!
+  "Max assets a single user can enter (borrow or use as collateral)"
+  maxAssets: BigInt!
 }
 
 """
 Market stores all high level variables for a cToken market
 """
 type Market @entity {
-    #Fields that match compounds API
-    "Yearly borrow rate. With 2102400 blocks per year"
-    borrowRate: BigDecimal!
-    "The cToken contract balance of ERC20 or ETH"
-    cash: BigDecimal!
-    "Collateral factor determining how much one can borrow"
-    collateralFactor: BigDecimal!
-    "Exchange rate of tokens / cTokens"
-    exchangeRate:  BigDecimal!
-    "Address of the interest rate model"
-    interestRateModelAddress: String!
-    "Name of the cToken"
-    name: String!
-    "Reserves stored in the contract"
-    reserves: BigDecimal!
-    "Yearly supply rate. With 2104400 blocks per year"
-    supplyRate: BigDecimal!
-    "CToken symbol"
-    symbol: String!
-    "CToken address"
-    id: ID!
-    "Borrows in the market"
-    totalBorrows: BigDecimal!
-    "CToken supply. CTokens have 8 decimals"
-    totalSupply: BigDecimal!
-    "Underlying token address"
-    underlyingAddress: String!
-    "Underlying token name"
-    underlyingName: String!
-    "Underlying price of token in ETH (ex. 0.007 DAI)"
-    underlyingPrice: BigDecimal!
-    "Underlying token symbol"
-    underlyingSymbol: String!
+  "CToken address"
+  id: ID!
 
-    # Fields that are not in compounds api
-    "Block the market is updated to"
-    accrualBlockTimestamp: Int!
-    "Timestamp the market was most recently updated"
-    blockTimestamp: Int!
-    "The history of the markets borrow index return (Think S&P 500)"
-    borrowIndex: BigDecimal!
-    "The factor determining interest that goes to reserves"
-    reserveFactor: BigInt!
-    "Underlying token price in USD"
-    underlyingPriceUSD: BigDecimal!
-    "Underlying token decimal length"
-    underlyingDecimals: Int!
+  "Name of the cToken"
+  name: String!
 
-    borrowerCount: Int!
-    supplierCount: Int!
+  "CToken symbol"
+  symbol: String!
+
+  "Underlying token address"
+  underlyingAddress: String!
+
+  "Underlying token name"
+  underlyingName: String!
+
+  "Underlying price of token in ETH (ex. 0.007 DAI)"
+  underlyingPrice: BigDecimal!
+
+  "Underlying token symbol"
+  underlyingSymbol: String!
+
+  "Underlying token price in USD"
+  underlyingPriceUSD: BigDecimal!
+
+  "Underlying token decimal length"
+  underlyingDecimals: Int!
+
+  "Borrows in the market"
+  totalBorrows: BigDecimal!
+
+  "CToken supply."
+  totalSupply: BigDecimal!
+
+  "Reserves stored in the contract"
+  reserves: BigDecimal!
+
+  "The cToken contract balance of ERC20 or ETH"
+  cash: BigDecimal!
+
+  "Yearly supply rate."
+  supplyRate: BigDecimal!
+
+  "Yearly borrow rate."
+  borrowRate: BigDecimal!
+
+  "Collateral factor determining how much one can borrow"
+  collateralFactor: BigDecimal!
+
+  "Exchange rate of tokens / cTokens"
+  exchangeRate: BigDecimal!
+
+  "The history of the markets borrow index return (Think S&P 500)"
+  borrowIndex: BigDecimal!
+
+  "The factor determining interest that goes to reserves"
+  reserveFactor: BigInt!
+
+  "Block the market is updated to"
+  accrualBlockTimestamp: Int!
+
+  "Timestamp the market was most recently updated"
+  blockTimestamp: Int!
+
+  "Address of the interest rate model"
+  interestRateModelAddress: String!
+
+  borrowerCount: Int!
+  supplierCount: Int!
 }
 
 """
@@ -75,16 +93,16 @@ Account is an ETH address, with a list of all cToken markets the account has
 participated in, along with liquidation information.
 """
 type Account @entity {
-    "User ETH address"
-    id: ID!
-    "Array of CTokens user is in"
-    tokens: [AccountCToken!]! @derivedFrom(field: "account")
-    "Count user has been liquidated"
-    countLiquidated: Int!
-    "Count user has liquidated others"
-    countLiquidator: Int!
-    "True if user has ever borrowed"
-    hasBorrowed: Boolean!
+  "User ETH address"
+  id: ID!
+  "Array of CTokens user is in"
+  tokens: [AccountCToken!]! @derivedFrom(field: "account")
+  "Count user has been liquidated"
+  countLiquidated: Int!
+  "Count user has liquidated others"
+  countLiquidator: Int!
+  "True if user has ever borrowed"
+  hasBorrowed: Boolean!
 }
 
 """
@@ -92,35 +110,35 @@ AccountCToken is a single account within a single cToken market, with data such
 as interest earned or paid
 """
 type AccountCToken @entity {
-    "Concatenation of CToken address and user address"
-    id: ID!
-    "Relation to market"
-    market: Market!
-    "Symbol of the cToken"
-    symbol: String!
-    "Relation to user"
-    account: Account!
-    "Transactions data"
-    transactions: [AccountCTokenTransaction!]! @derivedFrom(field:"account")
-    "Block number this asset was updated at in the contract"
-    accrualBlockNumber: BigInt!
-    "True if user is entered, false if they are exited"
-    enteredMarket: Boolean!
+  "Concatenation of CToken address and user address"
+  id: ID!
+  "Relation to market"
+  market: Market!
+  "Symbol of the cToken"
+  symbol: String!
+  "Relation to user"
+  account: Account!
+  "Transactions data"
+  transactions: [AccountCTokenTransaction!]! @derivedFrom(field: "account")
+  "Block number this asset was updated at in the contract"
+  accrualBlockNumber: BigInt!
+  "True if user is entered, false if they are exited"
+  enteredMarket: Boolean!
 
-    "CToken balance of the user"
-    cTokenBalance: BigDecimal!
-    "Total amount of underlying supplied"
-    totalUnderlyingSupplied: BigDecimal!
-    "Total amount of underling redeemed"
-    totalUnderlyingRedeemed: BigDecimal!
-    "The value of the borrow index upon users last interaction"
-    accountBorrowIndex: BigDecimal!
-    "Total amount underlying borrowed, exclusive of interest"
-    totalUnderlyingBorrowed: BigDecimal!
-    "Total amount underlying repaid"
-    totalUnderlyingRepaid: BigDecimal!
-    "Current borrow balance stored in contract (exclusive of interest since accrualBlockNumber)"
-    storedBorrowBalance: BigDecimal!
+  "CToken balance of the user"
+  cTokenBalance: BigDecimal!
+  "Total amount of underlying supplied"
+  totalUnderlyingSupplied: BigDecimal!
+  "Total amount of underling redeemed"
+  totalUnderlyingRedeemed: BigDecimal!
+  "The value of the borrow index upon users last interaction"
+  accountBorrowIndex: BigDecimal!
+  "Total amount underlying borrowed, exclusive of interest"
+  totalUnderlyingBorrowed: BigDecimal!
+  "Total amount underlying repaid"
+  totalUnderlyingRepaid: BigDecimal!
+  "Current borrow balance stored in contract (exclusive of interest since accrualBlockNumber)"
+  storedBorrowBalance: BigDecimal!
 }
 
 """
@@ -145,20 +163,20 @@ An interface for a transfer of any cToken. TransferEvent, MintEvent,
 RedeemEvent, and LiquidationEvent all use this interface
 """
 interface CTokenTransfer {
-    "Transaction hash concatenated with log index"
-    id: ID!
-    "cTokens transferred"
-    amount: BigDecimal!
-    "Account that received tokens"
-    to: String!
-    "Account that sent tokens"
-    from: String!
-    "Block number"
-    blockNumber: Int!
-    "Block time"
-    blockTime: Int!
-    "Symbol of the cToken transferred"
-    cTokenSymbol: String!
+  "Transaction hash concatenated with log index"
+  id: ID!
+  "cTokens transferred"
+  amount: BigDecimal!
+  "Account that received tokens"
+  to: String!
+  "Account that sent tokens"
+  from: String!
+  "Block number"
+  blockNumber: Int!
+  "Block time"
+  blockTime: Int!
+  "Symbol of the cToken transferred"
+  cTokenSymbol: String!
 }
 
 """
@@ -166,20 +184,20 @@ TransferEvent will be stored for every mint, redeem, liquidation, and any normal
 transfer between two accounts.
 """
 type TransferEvent implements CTokenTransfer @entity {
-    "Transaction hash concatenated with log index"
-    id: ID!
-    "cTokens transferred"
-    amount: BigDecimal!
-    "Account that received tokens"
-    to: String!
-    "Account that sent tokens"
-    from: String!
-    "Block number"
-    blockNumber: Int!
-    "Block time"
-    blockTime: Int!
-    "Symbol of the cToken transferred"
-    cTokenSymbol: String!
+  "Transaction hash concatenated with log index"
+  id: ID!
+  "cTokens transferred"
+  amount: BigDecimal!
+  "Account that received tokens"
+  to: String!
+  "Account that sent tokens"
+  from: String!
+  "Block number"
+  blockNumber: Int!
+  "Block time"
+  blockTime: Int!
+  "Symbol of the cToken transferred"
+  cTokenSymbol: String!
 }
 
 """
@@ -187,22 +205,22 @@ MintEvent stores information for mints. From address will always be a cToken
 market address
 """
 type MintEvent implements CTokenTransfer @entity {
-    "Transaction hash concatenated with log index"
-    id: ID!
-    "cTokens transferred"
-    amount: BigDecimal!
-    "Account that received tokens (minter)"
-    to: String!
-    "Account that sent tokens (CToken contract)"
-    from: String!
-    "Block number"
-    blockNumber: Int!
-    "Block time"
-    blockTime: Int!
-    "Symbol of the cToken transferred"
-    cTokenSymbol: String!
-    "Underlying token amount transferred"
-    underlyingAmount: BigDecimal
+  "Transaction hash concatenated with log index"
+  id: ID!
+  "cTokens transferred"
+  amount: BigDecimal!
+  "Account that received tokens (minter)"
+  to: String!
+  "Account that sent tokens (CToken contract)"
+  from: String!
+  "Block number"
+  blockNumber: Int!
+  "Block time"
+  blockTime: Int!
+  "Symbol of the cToken transferred"
+  cTokenSymbol: String!
+  "Underlying token amount transferred"
+  underlyingAmount: BigDecimal
 }
 
 """
@@ -210,22 +228,22 @@ RedeemEvent stores information for redeems. To address will always be a
 cToken market address
 """
 type RedeemEvent implements CTokenTransfer @entity {
-    "Transaction hash concatenated with log index"
-    id: ID!
-    "cTokens transferred"
-    amount: BigDecimal!
-    "Account that received tokens (CToken contract)"
-    to: String!
-    "Account that sent tokens (redeemer)"
-    from: String!
-    "Block number"
-    blockNumber: Int!
-    "Block time"
-    blockTime: Int!
-    "Symbol of the cToken transferred"
-    cTokenSymbol: String!
-    "Underlying token amount transferred"
-    underlyingAmount: BigDecimal
+  "Transaction hash concatenated with log index"
+  id: ID!
+  "cTokens transferred"
+  amount: BigDecimal!
+  "Account that received tokens (CToken contract)"
+  to: String!
+  "Account that sent tokens (redeemer)"
+  from: String!
+  "Block number"
+  blockNumber: Int!
+  "Block time"
+  blockTime: Int!
+  "Symbol of the cToken transferred"
+  cTokenSymbol: String!
+  "Underlying token amount transferred"
+  underlyingAmount: BigDecimal
 }
 
 """
@@ -233,24 +251,24 @@ LiquidationEvent stores information for liquidations. The event is emitted from
 the cToken market address.
 """
 type LiquidationEvent implements CTokenTransfer @entity {
-    "Transaction hash concatenated with log index"
-    id: ID!
-    "cTokens seized"
-    amount: BigDecimal!
-    "Liquidator receiving tokens"
-    to: String!
-    "Account being liquidated (borrower)"
-    from: String!
-    "Block number"
-    blockNumber: Int!
-    "Block time"
-    blockTime: Int!
-    "cToken that was sezied as collateral"
-    cTokenSymbol: String!
-    "Symbol of the underlying asset repaid through liquidation"
-    underlyingSymbol: String!
-    "Underlying cToken amount that was repaid by liquidator"
-    underlyingRepayAmount: BigDecimal!
+  "Transaction hash concatenated with log index"
+  id: ID!
+  "cTokens seized"
+  amount: BigDecimal!
+  "Liquidator receiving tokens"
+  to: String!
+  "Account being liquidated (borrower)"
+  from: String!
+  "Block number"
+  blockNumber: Int!
+  "Block time"
+  blockTime: Int!
+  "cToken that was sezied as collateral"
+  cTokenSymbol: String!
+  "Symbol of the underlying asset repaid through liquidation"
+  underlyingSymbol: String!
+  "Underlying cToken amount that was repaid by liquidator"
+  underlyingRepayAmount: BigDecimal!
 }
 
 """
@@ -258,40 +276,40 @@ Underlying transfers are transfers of underlying collateral for both borrows
 and repays
 """
 interface UnderlyingTransfer {
-    "Transaction hash concatenated with log index"
-    id: ID!
-    "Amount of underlying borrowed"
-    amount: BigDecimal!
-    "Total borrows of this asset the account has"
-    accountBorrows: BigDecimal!
-    "Account that borrowed the tokens"
-    borrower: String!
-    "Block number"
-    blockNumber: Int!
-    "Block time"
-    blockTime: Int!
-    "Symbol of the borrowed underlying asset"
-    underlyingSymbol: String!
+  "Transaction hash concatenated with log index"
+  id: ID!
+  "Amount of underlying borrowed"
+  amount: BigDecimal!
+  "Total borrows of this asset the account has"
+  accountBorrows: BigDecimal!
+  "Account that borrowed the tokens"
+  borrower: String!
+  "Block number"
+  blockNumber: Int!
+  "Block time"
+  blockTime: Int!
+  "Symbol of the borrowed underlying asset"
+  underlyingSymbol: String!
 }
 
 """
 BorrowEvent stores information for borrows
 """
 type BorrowEvent implements UnderlyingTransfer @entity {
-    "Transaction hash concatenated with log index"
-    id: ID!
-    "Amount of underlying borrowed"
-    amount: BigDecimal!
-    "Total borrows of this asset the account has"
-    accountBorrows: BigDecimal!
-    "Account that borrowed the tokens"
-    borrower: String!
-    "Block number"
-    blockNumber: Int!
-    "Block time"
-    blockTime: Int!
-    "Symbol of the borrowed underlying asset"
-    underlyingSymbol: String!
+  "Transaction hash concatenated with log index"
+  id: ID!
+  "Amount of underlying borrowed"
+  amount: BigDecimal!
+  "Total borrows of this asset the account has"
+  accountBorrows: BigDecimal!
+  "Account that borrowed the tokens"
+  borrower: String!
+  "Block number"
+  blockNumber: Int!
+  "Block time"
+  blockTime: Int!
+  "Symbol of the borrowed underlying asset"
+  underlyingSymbol: String!
 }
 
 """
@@ -299,33 +317,33 @@ RepayEvent stores information for repays. Payer is not always the same as
 borrower, such as in the event of a Liquidation
 """
 type RepayEvent implements UnderlyingTransfer @entity {
-    "Transaction hash concatenated with log index"
-    id: ID!
-    "Amount of underlying repaid"
-    amount: BigDecimal!
-    "Total borrows of this asset the account has"
-    accountBorrows: BigDecimal!
-    "Account that borrowed the tokens"
-    borrower: String!
-    "Block number"
-    blockNumber: Int!
-    "Block time"
-    blockTime: Int!
-    "Symbol of the borrowed underlying asset"
-    underlyingSymbol: String!
-    "Payer of the borrow funds"
-    payer: String!
+  "Transaction hash concatenated with log index"
+  id: ID!
+  "Amount of underlying repaid"
+  amount: BigDecimal!
+  "Total borrows of this asset the account has"
+  accountBorrows: BigDecimal!
+  "Account that borrowed the tokens"
+  borrower: String!
+  "Block number"
+  blockNumber: Int!
+  "Block time"
+  blockTime: Int!
+  "Symbol of the borrowed underlying asset"
+  underlyingSymbol: String!
+  "Payer of the borrow funds"
+  payer: String!
 }
 
 type User @entity {
-    " {borrow / supply}-{market ID}-{account address} "
-    id: ID!
+  " {borrow / supply}-{market ID}-{account address} "
+  id: ID!
 }
 
 type UsageDailySnapshot @entity {
-    " epoch days "
-    id: ID!
+  " epoch days "
+  id: ID!
 
-    borrowCount: Int!
-    supplyCount: Int!
+  borrowCount: Int!
+  supplyCount: Int!
 }
