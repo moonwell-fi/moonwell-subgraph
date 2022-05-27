@@ -1,11 +1,5 @@
 // For each division by 10, add one to exponent to truncate one significant figure
-import {
-  Address,
-  BigDecimal,
-  BigInt,
-  Bytes,
-  log,
-} from '@graphprotocol/graph-ts'
+import { Address, BigDecimal, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
 import {
   AccountCToken,
   Account,
@@ -21,6 +15,9 @@ export let mantissaFactorBD: BigDecimal = exponentToBigDecimal(18)
 export let cTokenDecimalsBD: BigDecimal = exponentToBigDecimal(8)
 export let zeroBD = BigDecimal.fromString('0')
 let zeroBI = BigInt.fromI32(0)
+let secondsPerDay = 24 * 60 * 60
+let daysPerYear = 365 as u8
+let mantissaFactorBI = BigInt.fromI32(10).pow(18)
 
 export function exponentToBigDecimal(decimals: i32): BigDecimal {
   let bd = BigDecimal.fromString('1')
@@ -28,6 +25,23 @@ export function exponentToBigDecimal(decimals: i32): BigDecimal {
     bd = bd.times(BigDecimal.fromString('10'))
   }
   return bd
+}
+
+// 100 * [-1 + (1 + second_rate / 10^18 * 86400) ^ 365]
+// where (1 + second_rate / 10^18 * 86400) ^ 365
+//     = (10^18 + second_rate * 86400)^365 / (10^18)^365
+export function convertSecondRateMantissaToAPY(rateMantissa: BigInt): BigDecimal {
+  let a = rateMantissa
+    .times(BigInt.fromI32(secondsPerDay))
+    .plus(mantissaFactorBI)
+    .pow(daysPerYear)
+  let b = mantissaFactorBI.pow(daysPerYear)
+  return new BigDecimal(BigInt.fromI32(100)).times(
+    a
+      .toBigDecimal()
+      .div(b.toBigDecimal())
+      .minus(new BigDecimal(BigInt.fromI32(1))),
+  )
 }
 
 export function getOrCreateComptroller(): Comptroller {

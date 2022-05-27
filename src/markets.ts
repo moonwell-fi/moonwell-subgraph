@@ -11,6 +11,7 @@ import {
   cTokenDecimalsBD,
   zeroBD,
   getOrCreateComptroller,
+  convertSecondRateMantissaToAPY,
 } from './helpers'
 
 let mMovrAddress = '0x6a1a771c7826596652dadc9145feaae62b1cd07f'
@@ -116,16 +117,6 @@ export function updateMarket(marketAddress: Address, blockTimestamp: i32): Marke
     market.blockTimestamp = blockTimestamp
     market.totalSupply = contract.totalSupply().toBigDecimal().div(cTokenDecimalsBD)
 
-    /* Exchange rate explanation
-       In Practice
-        - If you call the cDAI contract on etherscan it comes back (2.0 * 10^26)
-        - If you call the cUSDC contract on etherscan it comes back (2.0 * 10^14)
-        - The real value is ~0.02. So cDAI is off by 10^28, and cUSDC 10^16
-       How to calculate for tokens with different decimals
-        - Must div by tokenDecimals, 10^market.underlyingDecimals
-        - Must multiply by ctokenDecimals, 10^8
-        - Must div by mantissa, 10^18
-     */
     market.exchangeRate = contract
       .exchangeRateStored()
       .toBigDecimal()
@@ -155,29 +146,22 @@ export function updateMarket(marketAddress: Address, blockTimestamp: i32): Marke
       .div(exponentToBigDecimal(market.underlyingDecimals))
       .truncate(market.underlyingDecimals)
 
-    // rough estimation based on https://moonriver.moonscan.io/chart/blocks
-    let blocksPerYear = 365 * 3600
-
-    // Must convert to BigDecimal, and remove 10^18 that is used for Exp in Compound Solidity
-    market.borrowRate = contract
-      .borrowRatePerTimestamp()
-      .toBigDecimal()
-      .times(BigInt.fromI32(blocksPerYear).toBigDecimal())
-      .div(mantissaFactorBD)
-      .truncate(mantissaFactor)
-
-    // This fails on only the first call to cZRX. It is unclear why, but otherwise it works.
-    // So we handle it like this.
-    let supplyRatePerBlock = contract.try_supplyRatePerTimestamp()
-    if (supplyRatePerBlock.reverted) {
-      log.info('***CALL FAILED*** : cERC20 supplyRatePerBlock() reverted', [])
-      market.supplyRate = zeroBD
+    let borrowRatePerTimestampResult = contract.try_borrowRatePerTimestamp()
+    if (borrowRatePerTimestampResult.reverted) {
+      log.warning('[updateMarket] try_borrowRatePerTimestamp reverted', [])
     } else {
-      market.supplyRate = supplyRatePerBlock.value
-        .toBigDecimal()
-        .times(BigInt.fromI32(blocksPerYear).toBigDecimal())
-        .div(mantissaFactorBD)
-        .truncate(mantissaFactor)
+      market.borrowRate = convertSecondRateMantissaToAPY(
+        borrowRatePerTimestampResult.value,
+      )
+    }
+
+    let supplyRatePerTimestampResult = contract.try_supplyRatePerTimestamp()
+    if (supplyRatePerTimestampResult.reverted) {
+      log.info('[updateMarket] try_supplyRatePerTimestamp reverted', [])
+    } else {
+      market.supplyRate = convertSecondRateMantissaToAPY(
+        supplyRatePerTimestampResult.value,
+      )
     }
     market.save()
   }
