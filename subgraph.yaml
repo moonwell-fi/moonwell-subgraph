@@ -66,6 +66,8 @@ templates:
       abis:
         - name: CToken
           file: ./abis/ctoken.json
+        - name: Comptroller
+          file: ./abis/comptroller.json
         - name: PriceOracle
           file: ./abis/priceOracle.json
         - name: ERC20

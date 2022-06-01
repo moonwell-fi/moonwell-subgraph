@@ -1,5 +1,6 @@
 import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
 import { Market } from '../generated/schema'
+import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import { PriceOracle } from '../generated/templates/CToken/PriceOracle'
 import { ERC20 } from '../generated/templates/CToken/ERC20'
 import { AccrueInterest, CToken } from '../generated/templates/CToken/CToken'
@@ -16,6 +17,9 @@ import {
   zeroBI,
   daysPerYear,
   intToBigDecimal,
+  comptrollerAddr,
+  Mfam,
+  Movr,
 } from './helpers'
 
 let mMovrAddress = '0x6a1a771c7826596652dadc9145feaae62b1cd07f'
@@ -75,6 +79,7 @@ export function createMarket(marketID: string): Market {
   market.totalSupply = zeroBD
   market.borrowerCount = 0
   market.supplierCount = 0
+  market.borrowCap = zeroBI
 
   market.borrowIndex = zeroBI
   market.borrowRewardSpeedNative = zeroBI
@@ -90,7 +95,14 @@ export function createMarket(marketID: string): Market {
   market.borrowRewardProtocol = zeroBD
   market.supplyRewardNative = zeroBD
   market.supplyRewardProtocol = zeroBD
-  market.borrowCap = zeroBI
+  market.borrowRewardStateNativeIndex = zeroBI
+  market.borrowRewardStateNativeTimestamp = 0
+  market.borrowRewardStateProtocolIndex = zeroBI
+  market.borrowRewardStateProtocolTimestamp = 0
+  market.supplyRewardStateNativeIndex = zeroBI
+  market.supplyRewardStateNativeTimestamp = 0
+  market.supplyRewardStateProtocolIndex = zeroBI
+  market.supplyRewardStateProtocolTimestamp = 0
 
   market.accrualBlockTimestamp = 0
   market.blockTimestamp = 0
@@ -126,6 +138,7 @@ export function updateMarket(
   // Only updateMarket if it has not been updated this block
   if (market.accrualBlockTimestamp != blockTimestamp) {
     let contract = CToken.bind(marketAddress)
+    let comptrollerContract = ComptrollerContract.bind(comptrollerAddr)
 
     let ethPriceInUSD = getETHinUSD()
 
@@ -201,6 +214,60 @@ export function updateMarket(
       }
     }
 
+    let borrowRewardStateNativeResult = comptrollerContract.try_rewardBorrowState(
+      Movr,
+      marketAddress,
+    )
+    if (borrowRewardStateNativeResult.reverted) {
+      log.warning('[updateMarket] try_rewardBorrowState(MOVR, MTOKEN) reverted', [])
+    } else {
+      market.borrowRewardStateNativeIndex = borrowRewardStateNativeResult.value.getIndex()
+      market.borrowRewardStateNativeTimestamp = borrowRewardStateNativeResult.value
+        .getTimestamp()
+        .toI32()
+    }
+
+    let borrowRewardStateProtocolResult = comptrollerContract.try_rewardBorrowState(
+      Mfam,
+      marketAddress,
+    )
+    if (borrowRewardStateProtocolResult.reverted) {
+      log.warning('[updateMarket] try_rewardBorrowState(MFAM, MTOKEN) reverted', [])
+    } else {
+      market.borrowRewardStateProtocolIndex =
+        borrowRewardStateProtocolResult.value.getIndex()
+      market.borrowRewardStateProtocolTimestamp = borrowRewardStateProtocolResult.value
+        .getTimestamp()
+        .toI32()
+    }
+
+    let supplyRewardStateNativeResult = comptrollerContract.try_rewardSupplyState(
+      Movr,
+      marketAddress,
+    )
+    if (supplyRewardStateNativeResult.reverted) {
+      log.warning('[updateMarket] try_rewardSupplyState(MOVR, MTOKEN) reverted', [])
+    } else {
+      market.supplyRewardStateNativeIndex = supplyRewardStateNativeResult.value.getIndex()
+      market.supplyRewardStateNativeTimestamp = supplyRewardStateNativeResult.value
+        .getTimestamp()
+        .toI32()
+    }
+
+    let supplyRewardStateProtocolResult = comptrollerContract.try_rewardSupplyState(
+      Mfam,
+      marketAddress,
+    )
+    if (supplyRewardStateProtocolResult.reverted) {
+      log.warning('[updateMarket] try_rewardSupplyState(MFAM, MTOKEN) reverted', [])
+    } else {
+      market.supplyRewardStateProtocolIndex =
+        supplyRewardStateProtocolResult.value.getIndex()
+      market.supplyRewardStateProtocolTimestamp = supplyRewardStateProtocolResult.value
+        .getTimestamp()
+        .toI32()
+    }
+
     let borrowRatePerTimestampResult = contract.try_borrowRatePerTimestamp()
     if (borrowRatePerTimestampResult.reverted) {
       log.warning('[updateMarket] try_borrowRatePerTimestamp reverted', [])
@@ -232,8 +299,8 @@ function getOneProtocolTokenInNativeToken(): BigDecimal {
     log.warning('[getOneMFAMInMOVR] reverted', [])
     return zeroBD
   }
-  let MOVRReserve = getReservesResult.value.value0
-  let MFAMReserve = getReservesResult.value.value1
+  let MOVRReserve = getReservesResult.value.get_reserve0()
+  let MFAMReserve = getReservesResult.value.get_reserve1()
   return MOVRReserve.toBigDecimal().div(MFAMReserve.toBigDecimal())
 }
 

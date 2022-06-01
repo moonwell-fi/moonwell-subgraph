@@ -90,6 +90,18 @@ type Market @entity {
 
   supplyRewardProtocol: BigDecimal!
 
+  borrowRewardStateNativeIndex: BigInt!
+  borrowRewardStateNativeTimestamp: Int!
+
+  borrowRewardStateProtocolIndex: BigInt!
+  borrowRewardStateProtocolTimestamp: Int!
+
+  supplyRewardStateNativeIndex: BigInt!
+  supplyRewardStateNativeTimestamp: Int!
+
+  supplyRewardStateProtocolIndex: BigInt!
+  supplyRewardStateProtocolTimestamp: Int!
+
   borrowCap: BigInt!
 
   "The factor determining interest that goes to reserves"
