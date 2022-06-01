@@ -18,8 +18,8 @@ import {
   daysPerYear,
   intToBigDecimal,
   comptrollerAddr,
-  Mfam,
-  Movr,
+  ProtocolTokenRewardType,
+  NativeTokenRewardType,
 } from './helpers'
 
 let mMovrAddress = '0x6a1a771c7826596652dadc9145feaae62b1cd07f'
@@ -215,7 +215,7 @@ export function updateMarket(
     }
 
     let borrowRewardStateNativeResult = comptrollerContract.try_rewardBorrowState(
-      Movr,
+      NativeTokenRewardType,
       marketAddress,
     )
     if (borrowRewardStateNativeResult.reverted) {
@@ -228,7 +228,7 @@ export function updateMarket(
     }
 
     let borrowRewardStateProtocolResult = comptrollerContract.try_rewardBorrowState(
-      Mfam,
+      ProtocolTokenRewardType,
       marketAddress,
     )
     if (borrowRewardStateProtocolResult.reverted) {
@@ -242,7 +242,7 @@ export function updateMarket(
     }
 
     let supplyRewardStateNativeResult = comptrollerContract.try_rewardSupplyState(
-      Movr,
+      NativeTokenRewardType,
       marketAddress,
     )
     if (supplyRewardStateNativeResult.reverted) {
@@ -255,7 +255,7 @@ export function updateMarket(
     }
 
     let supplyRewardStateProtocolResult = comptrollerContract.try_rewardSupplyState(
-      Mfam,
+      ProtocolTokenRewardType,
       marketAddress,
     )
     if (supplyRewardStateProtocolResult.reverted) {
@@ -296,7 +296,7 @@ function getOneProtocolTokenInNativeToken(): BigDecimal {
   )
   let getReservesResult = lpTokenContract.try_getReserves()
   if (getReservesResult.reverted) {
-    log.warning('[getOneMFAMInMOVR] reverted', [])
+    log.warning('[getOneProtocolTokenInNativeToken] reverted', [])
     return zeroBD
   }
   let MOVRReserve = getReservesResult.value.get_reserve0()

@@ -19,8 +19,8 @@ import {
   updateCommonCTokenStats,
   createAccount,
   getOrCreateComptroller,
-  Mfam,
-  Movr,
+  ProtocolTokenRewardType,
+  NativeTokenRewardType,
 } from './helpers'
 import { createMarket } from './markets'
 
@@ -122,9 +122,9 @@ export function handleSupplyRewardSpeedUpdated(event: SupplyRewardSpeedUpdated):
 
   let rewardType = event.params.rewardToken
   let newSpeed = event.params.newSupplyRewardSpeed
-  if (rewardType == Mfam) {
+  if (rewardType == ProtocolTokenRewardType) {
     market.supplyRewardSpeedProtocol = newSpeed
-  } else if (rewardType == Movr) {
+  } else if (rewardType == NativeTokenRewardType) {
     market.supplyRewardSpeedNative = newSpeed
   }
   market.save()
@@ -140,9 +140,9 @@ export function handleBorrowRewardSpeedUpdated(event: BorrowRewardSpeedUpdated):
 
   let rewardType = event.params.rewardToken
   let newSpeed = event.params.newBorrowRewardSpeed
-  if (rewardType == Mfam) {
+  if (rewardType == ProtocolTokenRewardType) {
     market.borrowRewardSpeedProtocol = newSpeed
-  } else if (rewardType == Movr) {
+  } else if (rewardType == NativeTokenRewardType) {
     market.borrowRewardSpeedNative = newSpeed
   }
   market.save()

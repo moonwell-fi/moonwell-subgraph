@@ -12,8 +12,8 @@ import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Com
 export let comptrollerAddr = Address.fromString(
   '0x0b7a0EAA884849c6Af7a129e899536dDDcA4905E',
 )
-export let Mfam = 0
-export let Movr = 1
+export let ProtocolTokenRewardType = 0
+export let NativeTokenRewardType = 1
 export let mantissaFactor = 18
 export let cTokenDecimals = 8
 export let mantissaFactorBD: BigDecimal = exponentToBigDecimal(18)
