@@ -28,7 +28,7 @@ import {
   exponentToBigDecimal,
   cTokenDecimalsBD,
   cTokenDecimals,
-  getOrCreateUsageDailySnapshot,
+  getOrCreateDailySnapshot,
 } from './helpers'
 
 /* Account supplies assets into market and receives cTokens in exchange
@@ -83,7 +83,7 @@ export function handleMint(event: Mint): void {
     market.save()
   }
 
-  let snapshot = getOrCreateUsageDailySnapshot(event.block.timestamp.toI32())
+  let snapshot = getOrCreateDailySnapshot(event.block.timestamp.toI32())
   snapshot.supplyAmount = snapshot.supplyAmount.plus(underlyingAmount)
   snapshot.supplyAmountUSD = snapshot.supplyAmountUSD.plus(
     underlyingAmount.times(market.underlyingPriceUSD),
@@ -208,7 +208,7 @@ export function handleBorrow(event: Borrow): void {
     market.save()
   }
 
-  let snapshot = getOrCreateUsageDailySnapshot(event.block.timestamp.toI32())
+  let snapshot = getOrCreateDailySnapshot(event.block.timestamp.toI32())
   snapshot.borrowAmount = snapshot.borrowAmount.plus(borrowAmount)
   snapshot.borrowAmountUSD = snapshot.borrowAmountUSD.plus(
     borrowAmount.times(market.underlyingPriceUSD),

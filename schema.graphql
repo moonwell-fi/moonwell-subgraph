@@ -372,7 +372,7 @@ type User @entity {
   id: ID!
 }
 
-type UsageDailySnapshot @entity {
+type DailySnapshot @entity {
   " epoch days "
   id: ID!
 

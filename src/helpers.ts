@@ -5,7 +5,7 @@ import {
   Account,
   AccountCTokenTransaction,
   Comptroller,
-  UsageDailySnapshot,
+  DailySnapshot,
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 
@@ -97,11 +97,11 @@ export function getOrCreateComptroller(): Comptroller {
   return comptroller
 }
 
-export function getOrCreateUsageDailySnapshot(blockTimestamp: i32): UsageDailySnapshot {
+export function getOrCreateDailySnapshot(blockTimestamp: i32): DailySnapshot {
   let snapshotID = getEpochDays(blockTimestamp).toString()
-  let snapshot = UsageDailySnapshot.load(snapshotID)
+  let snapshot = DailySnapshot.load(snapshotID)
   if (!snapshot) {
-    snapshot = new UsageDailySnapshot(snapshotID)
+    snapshot = new DailySnapshot(snapshotID)
     snapshot.borrowAmount = zeroBD
     snapshot.supplyAmount = zeroBD
     snapshot.borrowAmountUSD = zeroBD
