@@ -102,8 +102,6 @@ export function getOrCreateUsageDailySnapshot(blockTimestamp: i32): UsageDailySn
   let snapshot = UsageDailySnapshot.load(snapshotID)
   if (!snapshot) {
     snapshot = new UsageDailySnapshot(snapshotID)
-    snapshot.borrowCount = 0
-    snapshot.supplyCount = 0
     snapshot.borrowAmount = zeroBD
     snapshot.supplyAmount = zeroBD
     snapshot.borrowAmountUSD = zeroBD

@@ -376,8 +376,6 @@ type UsageDailySnapshot @entity {
   " epoch days "
   id: ID!
 
-  borrowCount: Int!
-  supplyCount: Int!
   borrowAmount: BigDecimal!
   supplyAmount: BigDecimal!
   borrowAmountUSD: BigDecimal!
