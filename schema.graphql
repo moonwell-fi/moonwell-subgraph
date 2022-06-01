@@ -82,6 +82,14 @@ type Market @entity {
   "comptroller.supplyRewardSpeeds(MFAM, MTOKEN)"
   supplyRewardSpeedProtocol: BigInt!
 
+  borrowRewardNative: BigDecimal!
+
+  borrowRewardProtocol: BigDecimal!
+
+  supplyRewardNative: BigDecimal!
+
+  supplyRewardProtocol: BigDecimal!
+
   borrowCap: BigInt!
 
   "The factor determining interest that goes to reserves"

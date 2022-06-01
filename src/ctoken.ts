@@ -471,7 +471,12 @@ export function handleTransfer(event: Transfer): void {
 }
 
 export function handleAccrueInterest(event: AccrueInterest): void {
-  updateMarket(event.address, event.block.timestamp.toI32(), event)
+  updateMarket(
+    event.address,
+    event.block.timestamp.toI32(),
+    event.block.number.toI32(),
+    event,
+  )
 }
 
 export function handleNewReserveFactor(event: NewReserveFactor): void {

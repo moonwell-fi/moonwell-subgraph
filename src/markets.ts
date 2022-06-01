@@ -3,6 +3,7 @@ import { Market } from '../generated/schema'
 import { PriceOracle } from '../generated/templates/CToken/PriceOracle'
 import { ERC20 } from '../generated/templates/CToken/ERC20'
 import { AccrueInterest, CToken } from '../generated/templates/CToken/CToken'
+import { SolarbeamLPToken } from '../generated/templates/CToken/SolarbeamLPToken'
 
 import {
   exponentToBigDecimal,
@@ -13,9 +14,13 @@ import {
   getOrCreateComptroller,
   convertSecondRateMantissaToAPY,
   zeroBI,
+  daysPerYear,
+  intToBigDecimal,
 } from './helpers'
 
 let mMovrAddress = '0x6a1a771c7826596652dadc9145feaae62b1cd07f'
+let solarBeamMfamMovrPairAddress = '0xE6Bfc609A2e58530310D6964ccdd236fc93b4ADB'
+let solarBeamMfamMovrPairStartblock = 1512356
 
 function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
   let comptroller = getOrCreateComptroller()
@@ -103,6 +108,7 @@ function getETHinUSD(): BigDecimal {
 export function updateMarket(
   marketAddress: Address,
   blockTimestamp: i32,
+  blockNumber: i32,
   event: AccrueInterest,
 ): Market {
   let marketID = marketAddress.toHexString()
@@ -155,6 +161,40 @@ export function updateMarket(
       .truncate(market.underlyingDecimals)
     market.borrowIndex = event.params.borrowIndex
 
+    let nativeTokenPriceUSD = market.underlyingPriceUSD
+    let protocolTokenPriceUSD = zeroBD
+    if (blockNumber >= solarBeamMfamMovrPairStartblock) {
+      let oneProtocolTokenInNativeToken = getOneProtocolTokenInNativeToken()
+      protocolTokenPriceUSD = nativeTokenPriceUSD.times(oneProtocolTokenInNativeToken)
+      if (protocolTokenPriceUSD.gt(zeroBD)) {
+        let amountUnderlying = market.exchangeRate.times(market.totalSupply)
+        market.borrowRewardNative = getRewardEmission(
+          protocolTokenPriceUSD,
+          amountUnderlying,
+          market.underlyingPriceUSD,
+          market.borrowRewardSpeedNative,
+        )
+        market.borrowRewardProtocol = getRewardEmission(
+          protocolTokenPriceUSD,
+          amountUnderlying,
+          market.underlyingPriceUSD,
+          market.borrowRewardSpeedProtocol,
+        )
+        market.supplyRewardNative = getRewardEmission(
+          protocolTokenPriceUSD,
+          amountUnderlying,
+          market.underlyingPriceUSD,
+          market.supplyRewardSpeedNative,
+        )
+        market.supplyRewardProtocol = getRewardEmission(
+          protocolTokenPriceUSD,
+          amountUnderlying,
+          market.underlyingPriceUSD,
+          market.supplyRewardSpeedProtocol,
+        )
+      }
+    }
+
     let borrowRatePerTimestampResult = contract.try_borrowRatePerTimestamp()
     if (borrowRatePerTimestampResult.reverted) {
       log.warning('[updateMarket] try_borrowRatePerTimestamp reverted', [])
@@ -175,4 +215,34 @@ export function updateMarket(
     market.save()
   }
   return market
+}
+
+function getOneProtocolTokenInNativeToken(): BigDecimal {
+  let lpTokenContract = SolarbeamLPToken.bind(
+    Address.fromString(solarBeamMfamMovrPairAddress),
+  )
+  let getReservesResult = lpTokenContract.try_getReserves()
+  if (getReservesResult.reverted) {
+    log.warning('[getOneMFAMInMOVR] reverted', [])
+    return zeroBD
+  }
+  let MOVRReserve = getReservesResult.value.value0
+  let MFAMReserve = getReservesResult.value.value1
+  return MOVRReserve.toBigDecimal().div(MFAMReserve.toBigDecimal())
+}
+
+function getRewardEmission(
+  protocolTokenPriceUSD: BigDecimal,
+  underlyingAmount: BigDecimal,
+  underlyingPriceUSD: BigDecimal,
+  rewardSpeed: BigInt,
+): BigDecimal {
+  return rewardSpeed
+    .toBigDecimal()
+    .div(mantissaFactorBD)
+    .times(intToBigDecimal(daysPerYear))
+    .times(protocolTokenPriceUSD)
+    .div(underlyingAmount.times(underlyingPriceUSD))
+    .times(intToBigDecimal(daysPerYear))
+    .times(intToBigDecimal(100))
 }

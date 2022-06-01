@@ -70,6 +70,8 @@ templates:
           file: ./abis/priceOracle.json
         - name: ERC20
           file: ./abis/erc20.json
+        - name: SolarbeamLPToken
+          file: ./abis/solarbeamLPToken.json
       eventHandlers:
         - event: Mint(address,uint256,uint256)
           handler: handleMint

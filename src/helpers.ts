@@ -21,8 +21,12 @@ export let cTokenDecimalsBD: BigDecimal = exponentToBigDecimal(8)
 export let zeroBD = BigDecimal.zero()
 export let zeroBI = BigInt.zero()
 let secondsPerDay = 24 * 60 * 60
-let daysPerYear = 365 as u8
+export let daysPerYear = 365 as u8
 let mantissaFactorBI = BigInt.fromI32(10).pow(18)
+
+export function intToBigDecimal(a: i32): BigDecimal {
+  return new BigDecimal(BigInt.fromI32(a))
+}
 
 export function exponentToBigDecimal(decimals: i32): BigDecimal {
   let bd = BigDecimal.fromString('1')
