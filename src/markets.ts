@@ -73,6 +73,8 @@ export function createMarket(marketID: string): Market {
   market.symbol = cTokenContract.symbol()
   market.totalBorrows = zeroBD
   market.totalSupply = zeroBD
+  market.borrowerCount = 0
+  market.supplierCount = 0
 
   market.borrowIndex = zeroBI
   market.borrowRewardSpeedNative = zeroBI
@@ -84,6 +86,10 @@ export function createMarket(marketID: string): Market {
   market.borrowRewardSpeedProtocol = zeroBI
   market.supplyRewardSpeedNative = zeroBI
   market.supplyRewardSpeedProtocol = zeroBI
+  market.borrowRewardNative = zeroBD
+  market.borrowRewardProtocol = zeroBD
+  market.supplyRewardNative = zeroBD
+  market.supplyRewardProtocol = zeroBD
   market.borrowCap = zeroBI
 
   market.accrualBlockTimestamp = 0
