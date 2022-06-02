@@ -8,10 +8,8 @@ import {
   DailySnapshot,
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
+import { comptrollerAddr } from './constants'
 
-export let comptrollerAddr = Address.fromString(
-  '0x0b7a0EAA884849c6Af7a129e899536dDDcA4905E',
-)
 export let ProtocolTokenRewardType = 0
 export let NativeTokenRewardType = 1
 export let mantissaFactor = 18
@@ -61,7 +59,7 @@ export function getOrCreateComptroller(): Comptroller {
   let comptroller = Comptroller.load('1')
   if (!comptroller) {
     comptroller = new Comptroller('1')
-    let contract = ComptrollerContract.bind(comptrollerAddr)
+    let contract = ComptrollerContract.bind(Address.fromString(comptrollerAddr))
 
     let oracleResult = contract.try_oracle()
     if (oracleResult.reverted) {
