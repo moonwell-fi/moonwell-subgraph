@@ -17,14 +17,15 @@ import {
   zeroBI,
   daysPerYear,
   intToBigDecimal,
-  comptrollerAddr,
   ProtocolTokenRewardType,
   NativeTokenRewardType,
 } from './helpers'
-
-let mMovrAddress = '0x6a1a771c7826596652dadc9145feaae62b1cd07f'
-let solarBeamMfamMovrPairAddress = '0xE6Bfc609A2e58530310D6964ccdd236fc93b4ADB'
-let solarBeamMfamMovrPairStartblock = 1512356
+import {
+  comptrollerAddr,
+  mNativeAddr,
+  protocolNativePairAddr,
+  protocolNativePairStartBlock,
+} from './constants'
 
 function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
   let comptroller = getOrCreateComptroller()
@@ -44,7 +45,7 @@ export function createMarket(marketID: string): Market {
   let cTokenContract = CToken.bind(marketAddress)
 
   // MGlimmer doesn't have method `underlying` (unlike MErc20) therefore we handle it differently
-  if (marketID == mMovrAddress) {
+  if (marketID == mNativeAddr) {
     market.underlyingAddress = '0x0000000000000000000000000000000000000000'
     market.underlyingDecimals = 18
     market.underlyingPrice = BigDecimal.fromString('1')
@@ -114,7 +115,7 @@ function getETHinUSD(): BigDecimal {
   let comptroller = getOrCreateComptroller()
   let oracleAddress = Address.fromString(comptroller.priceOracle)
   let oracle = PriceOracle.bind(oracleAddress)
-  let tryPrice = oracle.try_getUnderlyingPrice(Address.fromString(mMovrAddress))
+  let tryPrice = oracle.try_getUnderlyingPrice(Address.fromString(mNativeAddr))
 
   let ethPriceInUSD = tryPrice.reverted
     ? zeroBD
@@ -138,12 +139,14 @@ export function updateMarket(
   // Only updateMarket if it has not been updated this block
   if (market.accrualBlockTimestamp != blockTimestamp) {
     let contract = CToken.bind(marketAddress)
-    let comptrollerContract = ComptrollerContract.bind(comptrollerAddr)
+    let comptrollerContract = ComptrollerContract.bind(
+      Address.fromString(comptrollerAddr),
+    )
 
     let ethPriceInUSD = getETHinUSD()
 
     // if cETH, we only update USD price
-    if (market.id == mMovrAddress) {
+    if (market.id == mNativeAddr) {
       market.underlyingPriceUSD = ethPriceInUSD.truncate(market.underlyingDecimals)
     } else {
       let tokenPriceUSD = getTokenPrice(marketAddress, market.underlyingDecimals)
@@ -182,7 +185,7 @@ export function updateMarket(
 
     let nativeTokenPriceUSD = market.underlyingPriceUSD
     let protocolTokenPriceUSD = zeroBD
-    if (blockNumber >= solarBeamMfamMovrPairStartblock) {
+    if (blockNumber >= protocolNativePairStartBlock) {
       let oneProtocolTokenInNativeToken = getOneProtocolTokenInNativeToken()
       protocolTokenPriceUSD = nativeTokenPriceUSD.times(oneProtocolTokenInNativeToken)
       if (protocolTokenPriceUSD.gt(zeroBD)) {
@@ -291,9 +294,7 @@ export function updateMarket(
 }
 
 function getOneProtocolTokenInNativeToken(): BigDecimal {
-  let lpTokenContract = SolarbeamLPToken.bind(
-    Address.fromString(solarBeamMfamMovrPairAddress),
-  )
+  let lpTokenContract = SolarbeamLPToken.bind(Address.fromString(protocolNativePairAddr))
   let getReservesResult = lpTokenContract.try_getReserves()
   if (getReservesResult.reverted) {
     log.warning('[getOneProtocolTokenInNativeToken] reverted', [])
