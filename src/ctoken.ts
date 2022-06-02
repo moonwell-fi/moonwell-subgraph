@@ -377,7 +377,7 @@ export function handleTransfer(event: Transfer): void {
   let market = Market.load(marketID)!
   /*
   if (market.accrualBlockNumber != event.block.number.toI32()) {
-    market = updateMarket(
+    updateMarket(
       event.address,
       event.block.number.toI32(),
       event.block.timestamp.toI32(),
@@ -488,10 +488,7 @@ export function handleNewMarketInterestRateModel(
   event: NewMarketInterestRateModel,
 ): void {
   let marketID = event.address.toHex()
-  let market = Market.load(marketID)
-  if (market == null) {
-    market = createMarket(marketID)
-  }
+  let market = Market.load(marketID)!
   market.interestRateModelAddress = event.params.newInterestRateModel.toHexString()
   market.save()
 }

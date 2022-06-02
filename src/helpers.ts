@@ -109,6 +109,10 @@ export function getOrCreateDailySnapshot(blockTimestamp: i32): DailySnapshot {
   return snapshot
 }
 
+export function addrEq(a: string, b: string): boolean {
+  return a.toLowerCase() == b.toLowerCase()
+}
+
 export function createAccountCToken(
   cTokenStatsID: string,
   symbol: string,

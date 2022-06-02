@@ -19,6 +19,7 @@ import {
   intToBigDecimal,
   ProtocolTokenRewardType,
   NativeTokenRewardType,
+  addrEq,
 } from './helpers'
 import {
   comptrollerAddr,
@@ -39,13 +40,13 @@ function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
         .div(exponentToBigDecimal(18 - underlyingDecimals + 18))
 }
 
-export function createMarket(marketID: string): Market {
+export function createMarket(marketID: string): Market | null {
   let market = new Market(marketID)
   let marketAddress = Address.fromString(marketID)
   let cTokenContract = CToken.bind(marketAddress)
 
   // MGlimmer doesn't have method `underlying` (unlike MErc20) therefore we handle it differently
-  if (marketID == mNativeAddr) {
+  if (addrEq(marketID, mNativeAddr)) {
     market.underlyingAddress = '0x0000000000000000000000000000000000000000'
     market.underlyingDecimals = 18
     market.underlyingPrice = BigDecimal.fromString('1')
@@ -53,13 +54,22 @@ export function createMarket(marketID: string): Market {
     market.underlyingSymbol = 'MOVR'
     market.underlyingPriceUSD = zeroBD
   } else {
-    let underlyingContract = ERC20.bind(cTokenContract.underlying())
-    market.underlyingAddress = cTokenContract.underlying().toHexString()
-    market.underlyingDecimals = underlyingContract.decimals()
-    market.underlyingName = underlyingContract.name()
-    market.underlyingSymbol = underlyingContract.symbol()
-    market.underlyingPriceUSD = zeroBD
-    market.underlyingPrice = zeroBD
+    let underlyingAddrResult = cTokenContract.try_underlying()
+    if (underlyingAddrResult.reverted) {
+      log.warning('[createMarket] try_underlying on {} reverted', [
+        marketAddress.toHexString(),
+      ])
+      return null
+    } else {
+      let underlyingAddr = underlyingAddrResult.value
+      let underlyingContract = ERC20.bind(underlyingAddr)
+      market.underlyingAddress = underlyingAddr.toHexString()
+      market.underlyingDecimals = underlyingContract.decimals()
+      market.underlyingName = underlyingContract.name()
+      market.underlyingSymbol = underlyingContract.symbol()
+      market.underlyingPriceUSD = zeroBD
+      market.underlyingPrice = zeroBD
+    }
   }
 
   let interestRateModelAddress = cTokenContract.try_interestRateModel()
@@ -129,11 +139,12 @@ export function updateMarket(
   blockTimestamp: i32,
   blockNumber: i32,
   event: AccrueInterest,
-): Market {
+): void {
   let marketID = marketAddress.toHexString()
   let market = Market.load(marketID)
-  if (market == null) {
-    market = createMarket(marketID)
+  if (!market) {
+    log.warning('[updateMarket] market {} not found', [marketID])
+    return
   }
 
   // Only updateMarket if it has not been updated this block
@@ -146,7 +157,7 @@ export function updateMarket(
     let ethPriceInUSD = getETHinUSD()
 
     // if cETH, we only update USD price
-    if (market.id == mNativeAddr) {
+    if (addrEq(market.id, mNativeAddr)) {
       market.underlyingPriceUSD = ethPriceInUSD.truncate(market.underlyingDecimals)
     } else {
       let tokenPriceUSD = getTokenPrice(marketAddress, market.underlyingDecimals)
@@ -290,7 +301,6 @@ export function updateMarket(
     }
     market.save()
   }
-  return market
 }
 
 function getOneProtocolTokenInNativeToken(): BigDecimal {

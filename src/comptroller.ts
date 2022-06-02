@@ -28,7 +28,12 @@ export function handleMarketListed(event: MarketListed): void {
   // Dynamically index all new listed tokens
   CToken.create(event.params.mToken)
   // Create the market for this token, since it's now been listed.
-  let market = createMarket(event.params.mToken.toHexString())
+  let marketID = event.params.mToken.toHexString()
+  let market = createMarket(marketID)
+  if (!market) {
+    log.warning('[handleMarketListed] market {} fails to create', [marketID])
+    return
+  }
 
   market.save()
 }
