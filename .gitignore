@@ -1,5 +1,10 @@
-build/
 node_modules/
-src/types/
 .DS_STORE
 .idea/
+
+# subgraph specific
+generated/
+build/
+# generated from mustache
+subgraph.yaml
+src/constants.ts

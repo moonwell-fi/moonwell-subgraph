@@ -1,38 +1,15 @@
 {
-  "name": "benqi",
+  "name": "moonwell-subgraph",
   "version": "1.0.0",
-  "repository": "https://github.com/compound-finance/compound-v2-subgraph",
+  "repository": "https://github.com/moonwell-fi/moonwell-subgraph",
   "license": "MIT",
-  "scripts": {
-    "codegen": "graph codegen --output-dir src/types/",
-    "build": "graph build --ipfs https://api.staging.thegraph.com/ipfs/ ",
-    "create-local": "graph create moonwell-fi/moonwell --node http://127.0.0.1:8020",
-    "deploy-local": "graph deploy moonwell-fi/moonwell --debug --ipfs http://localhost:5001 --node http://127.0.0.1:9933/",
-    "deploy": "graph deploy moonwell-fi/Moonwell --debug --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
-    "deploy-staging": "graph deploy --debug --ipfs https://api.staging.thegraph.com/ipfs/ --node https://api.staging.thegraph.com/deploy/ davekaj/compoundv2",
-    "prettier": "./node_modules/.bin/prettier —-write '**/*.ts'"
+  "scripts": {},
+  "dependencies": {
+    "@graphprotocol/graph-ts": "0.27.0"
   },
   "devDependencies": {
-    "@graphprotocol/graph-cli": "0.18.0",
-    "@graphprotocol/graph-ts": "0.18.0",
-    "@typescript-eslint/eslint-plugin": "^2.0.0",
-    "@typescript-eslint/parser": "^2.0.0",
-    "eslint": "^6.2.2",
-    "eslint-config-prettier": "^6.1.0",
-    "husky": "^3.0.5",
-    "lint-staged": "^9.2.5",
-    "prettier": "^1.18.2",
-    "typescript": "^3.5.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,css,md}": [
-      "prettier --write --config ./.prettierrc",
-      "git add"
-    ]
+    "@graphprotocol/graph-cli": "0.30.1",
+    "prettier": "^2.6.2",
+    "mustache": "^4.2.0"
   }
 }
