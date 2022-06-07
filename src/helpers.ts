@@ -19,35 +19,28 @@ export let cTokenDecimalsBD: BigDecimal = exponentToBigDecimal(8)
 export let zeroBD = BigDecimal.zero()
 export let zeroBI = BigInt.zero()
 let secondsPerDay = 24 * 60 * 60
-export let daysPerYear = 365 as u8
-let mantissaFactorBI = BigInt.fromI32(10).pow(18)
+export let daysPerYear = 365
 
 export function intToBigDecimal(a: i32): BigDecimal {
   return new BigDecimal(BigInt.fromI32(a))
 }
 
 export function exponentToBigDecimal(decimals: i32): BigDecimal {
-  let bd = BigDecimal.fromString('1')
+  let ten = BigInt.fromI32(10)
+  let res = BigInt.fromI32(1)
   for (let i = 0; i < decimals; i++) {
-    bd = bd.times(BigDecimal.fromString('10'))
+    res = res.times(ten)
   }
-  return bd
+  return res.toBigDecimal()
 }
 
-// 100 * [-1 + (1 + second_rate / 10^18 * 86400) ^ 365]
-// where (1 + second_rate / 10^18 * 86400) ^ 365
-//     = (10^18 + second_rate * 86400)^365 / (10^18)^365
 export function convertSecondRateMantissaToAPY(rateMantissa: BigInt): BigDecimal {
-  let a = rateMantissa
-    .times(BigInt.fromI32(secondsPerDay))
-    .plus(mantissaFactorBI)
-    .pow(daysPerYear)
-  let b = mantissaFactorBI.pow(daysPerYear)
-  return new BigDecimal(BigInt.fromI32(100)).times(
-    a
-      .toBigDecimal()
-      .div(b.toBigDecimal())
-      .minus(new BigDecimal(BigInt.fromI32(1))),
+  return BigDecimal.fromString(
+    (
+      100.0 *
+      (Math.pow(1.0 + (f64(rateMantissa.toI64()) * secondsPerDay) / 1e18, daysPerYear) -
+        1)
+    ).toString(),
   )
 }
 
