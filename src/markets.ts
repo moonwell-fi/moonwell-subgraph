@@ -321,6 +321,9 @@ function getRewardEmission(
   underlyingPriceUSD: BigDecimal,
   rewardSpeed: BigInt,
 ): BigDecimal {
+  if (underlyingAmount == zeroBD || underlyingPriceUSD == zeroBD) {
+    return zeroBD
+  }
   return rewardSpeed
     .toBigDecimal()
     .div(mantissaFactorBD)
