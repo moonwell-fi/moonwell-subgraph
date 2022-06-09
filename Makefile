@@ -18,6 +18,7 @@ generate-config:
 codegen:
 	yarn graph codegen
 
+.PHONY: build
 build:
 	yarn graph build
 
@@ -25,4 +26,4 @@ deploy:
 	yarn graph deploy moonwell-fi/moonwell-$(network) --access-token $(access_token) --node https://api.thegraph.com/deploy/
 
 all:
-	$(MAKE) clean generate-config codegen build deploy
+	$(MAKE) clean generate-config codegen deploy
