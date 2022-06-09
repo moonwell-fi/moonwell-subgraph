@@ -372,9 +372,10 @@ type User @entity {
   id: ID!
 }
 
-type DailySnapshot @entity {
-  " epoch days "
+type MarketDailySnapshot @entity {
+  " {market smart contract address}-{epoch days} "
   id: ID!
+  market: Market!
 
   borrowAmount: BigDecimal!
   supplyAmount: BigDecimal!
