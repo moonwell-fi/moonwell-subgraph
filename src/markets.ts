@@ -23,6 +23,7 @@ import {
 } from './helpers'
 import {
   comptrollerAddr,
+  nativeToken,
   mNativeAddr,
   protocolNativePairAddr,
   protocolNativePairStartBlock,
@@ -50,8 +51,8 @@ export function createMarket(marketID: string): Market | null {
     market.underlyingAddress = '0x0000000000000000000000000000000000000000'
     market.underlyingDecimals = 18
     market.underlyingPrice = BigDecimal.fromString('1')
-    market.underlyingName = 'MOVR'
-    market.underlyingSymbol = 'MOVR'
+    market.underlyingName = nativeToken
+    market.underlyingSymbol = nativeToken
     market.underlyingPriceUSD = zeroBD
   } else {
     let underlyingAddrResult = cTokenContract.try_underlying()
