@@ -21,14 +21,14 @@ import {
   User,
 } from '../generated/schema'
 
-import { createMarket, updateMarket } from './markets'
+import { updateMarket } from './markets'
 import {
   createAccount,
   updateCommonCTokenStats,
   exponentToBigDecimal,
   cTokenDecimalsBD,
   cTokenDecimals,
-  getOrCreateDailySnapshot,
+  getOrCreateMarketDailySnapshot,
 } from './helpers'
 
 /* Account supplies assets into market and receives cTokens in exchange
@@ -83,7 +83,7 @@ export function handleMint(event: Mint): void {
     market.save()
   }
 
-  let snapshot = getOrCreateDailySnapshot(event.block.timestamp.toI32())
+  let snapshot = getOrCreateMarketDailySnapshot(marketID, event.block.timestamp.toI32())
   snapshot.supplyAmount = snapshot.supplyAmount.plus(underlyingAmount)
   snapshot.supplyAmountUSD = snapshot.supplyAmountUSD.plus(
     underlyingAmount.times(market.underlyingPriceUSD),
@@ -208,7 +208,7 @@ export function handleBorrow(event: Borrow): void {
     market.save()
   }
 
-  let snapshot = getOrCreateDailySnapshot(event.block.timestamp.toI32())
+  let snapshot = getOrCreateMarketDailySnapshot(marketID, event.block.timestamp.toI32())
   snapshot.borrowAmount = snapshot.borrowAmount.plus(borrowAmount)
   snapshot.borrowAmountUSD = snapshot.borrowAmountUSD.plus(
     borrowAmount.times(market.underlyingPriceUSD),
