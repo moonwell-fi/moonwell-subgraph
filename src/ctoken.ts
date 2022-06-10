@@ -21,14 +21,13 @@ import {
   User,
 } from '../generated/schema'
 
-import { updateMarket } from './markets'
+import { snapshotMarket, updateMarket } from './markets'
 import {
   createAccount,
   updateCommonCTokenStats,
   exponentToBigDecimal,
   cTokenDecimalsBD,
   cTokenDecimals,
-  getOrCreateMarketDailySnapshot,
 } from './helpers'
 
 /* Account supplies assets into market and receives cTokens in exchange
@@ -82,13 +81,6 @@ export function handleMint(event: Mint): void {
     market.supplierCount = market.supplierCount + 1
     market.save()
   }
-
-  let snapshot = getOrCreateMarketDailySnapshot(marketID, event.block.timestamp.toI32())
-  snapshot.supplyAmount = snapshot.supplyAmount.plus(underlyingAmount)
-  snapshot.supplyAmountUSD = snapshot.supplyAmountUSD.plus(
-    underlyingAmount.times(market.underlyingPriceUSD),
-  )
-  snapshot.save()
 }
 
 /*  Account supplies cTokens into market and receives underlying asset in exchange
@@ -207,13 +199,6 @@ export function handleBorrow(event: Borrow): void {
     market.borrowerCount = market.borrowerCount + 1
     market.save()
   }
-
-  let snapshot = getOrCreateMarketDailySnapshot(marketID, event.block.timestamp.toI32())
-  snapshot.borrowAmount = snapshot.borrowAmount.plus(borrowAmount)
-  snapshot.borrowAmountUSD = snapshot.borrowAmountUSD.plus(
-    borrowAmount.times(market.underlyingPriceUSD),
-  )
-  snapshot.save()
 }
 
 /* Repay some amount borrowed. Anyone can repay anyones balance
@@ -475,6 +460,7 @@ export function handleAccrueInterest(event: AccrueInterest): void {
     event.block.number.toI32(),
     event,
   )
+  snapshotMarket(event.address, event.block.timestamp.toI32())
 }
 
 export function handleNewReserveFactor(event: NewReserveFactor): void {
