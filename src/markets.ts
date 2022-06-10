@@ -21,6 +21,7 @@ import {
   NativeTokenRewardType,
   addrEq,
   getOrCreateMarketDailySnapshot,
+  secondsPerDay,
 } from './helpers'
 import {
   comptrollerAddr,
@@ -196,37 +197,40 @@ export function updateMarket(
       .truncate(market.underlyingDecimals)
     market.borrowIndex = event.params.borrowIndex
 
-    let nativeTokenPriceUSD = market.underlyingPriceUSD
-    let protocolTokenPriceUSD = zeroBD
-    if (blockNumber >= protocolNativePairStartBlock) {
-      let oneProtocolTokenInNativeToken = getOneProtocolTokenInNativeToken()
-      protocolTokenPriceUSD = nativeTokenPriceUSD.times(oneProtocolTokenInNativeToken)
-      if (protocolTokenPriceUSD.gt(zeroBD)) {
-        let amountUnderlying = market.exchangeRate.times(market.totalSupply)
-        market.borrowRewardNative = getRewardEmission(
-          protocolTokenPriceUSD,
-          amountUnderlying,
-          market.underlyingPriceUSD,
-          market.borrowRewardSpeedNative,
-        )
-        market.borrowRewardProtocol = getRewardEmission(
-          protocolTokenPriceUSD,
-          amountUnderlying,
-          market.underlyingPriceUSD,
-          market.borrowRewardSpeedProtocol,
-        )
-        market.supplyRewardNative = getRewardEmission(
-          protocolTokenPriceUSD,
-          amountUnderlying,
-          market.underlyingPriceUSD,
-          market.supplyRewardSpeedNative,
-        )
-        market.supplyRewardProtocol = getRewardEmission(
-          protocolTokenPriceUSD,
-          amountUnderlying,
-          market.underlyingPriceUSD,
-          market.supplyRewardSpeedProtocol,
-        )
+    let amountUnderlying = market.exchangeRate.times(market.totalSupply)
+    // get native token price
+    let nativeTokenPriceUSD = getTokenPrice(Address.fromString(mNativeAddr), 18)
+    if (nativeTokenPriceUSD.gt(zeroBD)) {
+      market.borrowRewardNative = getRewardEmission(
+        nativeTokenPriceUSD,
+        amountUnderlying,
+        market.underlyingPriceUSD,
+        market.borrowRewardSpeedNative,
+      )
+      market.supplyRewardNative = getRewardEmission(
+        nativeTokenPriceUSD,
+        amountUnderlying,
+        market.underlyingPriceUSD,
+        market.supplyRewardSpeedNative,
+      )
+      if (blockNumber >= protocolNativePairStartBlock) {
+        // get protocol token price
+        let protocolTokenPriceUSD =
+          getOneProtocolTokenInNativeToken().times(nativeTokenPriceUSD)
+        if (protocolTokenPriceUSD.gt(zeroBD)) {
+          market.borrowRewardProtocol = getRewardEmission(
+            protocolTokenPriceUSD,
+            amountUnderlying,
+            market.underlyingPriceUSD,
+            market.borrowRewardSpeedProtocol,
+          )
+          market.supplyRewardProtocol = getRewardEmission(
+            protocolTokenPriceUSD,
+            amountUnderlying,
+            market.underlyingPriceUSD,
+            market.supplyRewardSpeedProtocol,
+          )
+        }
       }
     }
 
@@ -335,7 +339,7 @@ function getOneProtocolTokenInNativeToken(): BigDecimal {
 }
 
 function getRewardEmission(
-  protocolTokenPriceUSD: BigDecimal,
+  rewardTokenPriceUSD: BigDecimal,
   underlyingAmount: BigDecimal,
   underlyingPriceUSD: BigDecimal,
   rewardSpeed: BigInt,
@@ -346,8 +350,8 @@ function getRewardEmission(
   return rewardSpeed
     .toBigDecimal()
     .div(mantissaFactorBD)
-    .times(intToBigDecimal(daysPerYear))
-    .times(protocolTokenPriceUSD)
+    .times(intToBigDecimal(secondsPerDay))
+    .times(rewardTokenPriceUSD)
     .div(underlyingAmount.times(underlyingPriceUSD))
     .times(intToBigDecimal(daysPerYear))
     .times(intToBigDecimal(100))
