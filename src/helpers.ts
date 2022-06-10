@@ -18,7 +18,7 @@ export let mantissaFactorBD: BigDecimal = exponentToBigDecimal(18)
 export let cTokenDecimalsBD: BigDecimal = exponentToBigDecimal(8)
 export let zeroBD = BigDecimal.zero()
 export let zeroBI = BigInt.zero()
-let secondsPerDay = 24 * 60 * 60
+export let secondsPerDay = 24 * 60 * 60
 export let daysPerYear = 365
 
 export function intToBigDecimal(a: i32): BigDecimal {
