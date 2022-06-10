@@ -20,6 +20,7 @@ import {
   ProtocolTokenRewardType,
   NativeTokenRewardType,
   addrEq,
+  getOrCreateMarketDailySnapshot,
 } from './helpers'
 import {
   comptrollerAddr,
@@ -302,6 +303,23 @@ export function updateMarket(
     }
     market.save()
   }
+}
+
+export function snapshotMarket(marketAddress: Address, blockTimestamp: i32): void {
+  let marketID = marketAddress.toHexString()
+  let market = Market.load(marketID)
+  if (!market) {
+    log.warning('[snapshotMarket] market {} not found', [marketID])
+    return
+  }
+  let snapshot = getOrCreateMarketDailySnapshot(marketID, blockTimestamp)
+  snapshot.totalBorrows = market.totalBorrows
+  snapshot.totalBorrowsUSD = market.totalBorrows.times(market.underlyingPriceUSD)
+  snapshot.totalSupplies = market.exchangeRate.times(market.totalSupply)
+  snapshot.totalSuppliesUSD = market.exchangeRate
+    .times(market.totalSupply)
+    .times(market.underlyingPriceUSD)
+  snapshot.save()
 }
 
 function getOneProtocolTokenInNativeToken(): BigDecimal {

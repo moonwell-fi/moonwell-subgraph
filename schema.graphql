@@ -377,8 +377,8 @@ type MarketDailySnapshot @entity {
   id: ID!
   market: Market!
 
-  borrowAmount: BigDecimal!
-  supplyAmount: BigDecimal!
-  borrowAmountUSD: BigDecimal!
-  supplyAmountUSD: BigDecimal!
+  totalBorrows: BigDecimal!
+  totalSupplies: BigDecimal!
+  totalBorrowsUSD: BigDecimal!
+  totalSuppliesUSD: BigDecimal!
 }
