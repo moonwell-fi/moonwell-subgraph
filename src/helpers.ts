@@ -97,10 +97,10 @@ export function getOrCreateMarketDailySnapshot(
   if (!snapshot) {
     snapshot = new MarketDailySnapshot(snapshotID)
     snapshot.market = marketID
-    snapshot.borrowAmount = zeroBD
-    snapshot.supplyAmount = zeroBD
-    snapshot.borrowAmountUSD = zeroBD
-    snapshot.supplyAmountUSD = zeroBD
+    snapshot.totalBorrows = zeroBD
+    snapshot.totalSupplies = zeroBD
+    snapshot.totalBorrowsUSD = zeroBD
+    snapshot.totalSuppliesUSD = zeroBD
     snapshot.save()
   }
   return snapshot
