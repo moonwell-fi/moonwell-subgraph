@@ -305,6 +305,7 @@ export function updateMarket(
         supplyRatePerTimestampResult.value,
       )
     }
+
     market.save()
   }
 }

@@ -367,11 +367,6 @@ type RepayEvent implements UnderlyingTransfer @entity {
   payer: String!
 }
 
-type User @entity {
-  " {borrow / supply}-{market ID}-{account address} "
-  id: ID!
-}
-
 type MarketDailySnapshot @entity {
   " {market smart contract address}-{epoch days} "
   id: ID!

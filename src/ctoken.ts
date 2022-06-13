@@ -1,3 +1,4 @@
+import { log } from '@graphprotocol/graph-ts'
 import {
   Mint,
   Redeem,
@@ -8,6 +9,7 @@ import {
   AccrueInterest,
   NewReserveFactor,
   NewMarketInterestRateModel,
+  CToken,
 } from '../generated/templates/CToken/CToken'
 import {
   Market,
@@ -18,7 +20,6 @@ import {
   TransferEvent,
   BorrowEvent,
   RepayEvent,
-  User,
 } from '../generated/schema'
 
 import { snapshotMarket, updateMarket } from './markets'
@@ -69,18 +70,6 @@ export function handleMint(event: Mint): void {
   mint.cTokenSymbol = market.symbol
   mint.underlyingAmount = underlyingAmount
   mint.save()
-
-  let userID = 'supply'
-    .concat('-')
-    .concat(marketID)
-    .concat('-')
-    .concat(event.params.minter.toHexString())
-  if (!User.load(userID)) {
-    new User(userID).save()
-
-    market.supplierCount = market.supplierCount + 1
-    market.save()
-  }
 }
 
 /*  Account supplies cTokens into market and receives underlying asset in exchange
@@ -191,14 +180,6 @@ export function handleBorrow(event: Borrow): void {
   borrow.blockTime = event.block.timestamp.toI32()
   borrow.underlyingSymbol = market.underlyingSymbol
   borrow.save()
-
-  let userID = 'borrow'.concat('-').concat(marketID).concat('-').concat(accountID)
-  if (!User.load(userID)) {
-    new User(userID).save()
-
-    market.borrowerCount = market.borrowerCount + 1
-    market.save()
-  }
 }
 
 /* Repay some amount borrowed. Anyone can repay anyones balance
@@ -369,6 +350,33 @@ export function handleTransfer(event: Transfer): void {
     )
   }
 */
+  let cTokenContract = CToken.bind(event.address)
+  // check to
+  let balanceOfToAccountResult = cTokenContract.try_balanceOf(event.params.to)
+  if (balanceOfToAccountResult.reverted) {
+    log.warning('[handleTransfer] try_balanceOf({}) on {} reverted', [
+      event.params.to.toHexString(),
+      marketID,
+    ])
+  } else {
+    if (balanceOfToAccountResult.value.equals(event.params.amount)) {
+      market.supplierCount = market.supplierCount + 1
+      market.save()
+    }
+  }
+  // check from
+  let balanceOfFromAccountResult = cTokenContract.try_balanceOf(event.params.from)
+  if (balanceOfFromAccountResult.reverted) {
+    log.warning('[handleTransfer] try_balanceOf({}) on {} reverted', [
+      event.params.from.toHexString(),
+      marketID,
+    ])
+  } else {
+    if (balanceOfFromAccountResult.value.equals(event.params.amount)) {
+      market.supplierCount = market.supplierCount - 1
+      market.save()
+    }
+  }
 
   let amountUnderlying = market.exchangeRate.times(
     event.params.amount.toBigDecimal().div(cTokenDecimalsBD),

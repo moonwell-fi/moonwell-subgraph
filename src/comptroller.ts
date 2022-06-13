@@ -39,49 +39,63 @@ export function handleMarketListed(event: MarketListed): void {
 }
 
 export function handleMarketEntered(event: MarketEntered): void {
-  let market = Market.load(event.params.mToken.toHexString())
-  if (market != null) {
-    let accountID = event.params.account.toHex()
-    let account = Account.load(accountID)
-    if (account == null) {
-      createAccount(accountID)
-    }
-
-    let cTokenStats = updateCommonCTokenStats(
-      market.id,
-      market.symbol,
-      accountID,
-      event.transaction.hash,
-      event.block.timestamp,
-      event.block.number,
-      event.logIndex,
-    )
-    cTokenStats.enteredMarket = true
-    cTokenStats.save()
+  let marketID = event.params.mToken.toHexString()
+  let market = Market.load(marketID)
+  if (!market) {
+    log.warning('[handleMarketEntered] market {} not found', [marketID])
+    return
   }
+
+  market.borrowerCount = market.borrowerCount + 1
+  market.save()
+
+  let accountID = event.params.account.toHex()
+  let account = Account.load(accountID)
+  if (account == null) {
+    createAccount(accountID)
+  }
+
+  let cTokenStats = updateCommonCTokenStats(
+    market.id,
+    market.symbol,
+    accountID,
+    event.transaction.hash,
+    event.block.timestamp,
+    event.block.number,
+    event.logIndex,
+  )
+  cTokenStats.enteredMarket = true
+  cTokenStats.save()
 }
 
 export function handleMarketExited(event: MarketExited): void {
-  let market = Market.load(event.params.mToken.toHexString())
-  if (market != null) {
-    let accountID = event.params.account.toHex()
-    let account = Account.load(accountID)
-    if (account == null) {
-      createAccount(accountID)
-    }
-
-    let cTokenStats = updateCommonCTokenStats(
-      market.id,
-      market.symbol,
-      accountID,
-      event.transaction.hash,
-      event.block.timestamp,
-      event.block.number,
-      event.logIndex,
-    )
-    cTokenStats.enteredMarket = false
-    cTokenStats.save()
+  let marketID = event.params.mToken.toHexString()
+  let market = Market.load(marketID)
+  if (!market) {
+    log.warning('[handleMarketExited] market {} not found', [marketID])
+    return
   }
+
+  market.borrowerCount = market.borrowerCount - 1
+  market.save()
+
+  let accountID = event.params.account.toHex()
+  let account = Account.load(accountID)
+  if (account == null) {
+    createAccount(accountID)
+  }
+
+  let cTokenStats = updateCommonCTokenStats(
+    market.id,
+    market.symbol,
+    accountID,
+    event.transaction.hash,
+    event.block.timestamp,
+    event.block.number,
+    event.logIndex,
+  )
+  cTokenStats.enteredMarket = false
+  cTokenStats.save()
 }
 
 export function handleNewCloseFactor(event: NewCloseFactor): void {
