@@ -197,13 +197,13 @@ export function updateMarket(
       .truncate(market.underlyingDecimals)
     market.borrowIndex = event.params.borrowIndex
 
-    let amountUnderlying = market.exchangeRate.times(market.totalSupply)
     // get native token price
     let nativeTokenPriceUSD = getTokenPrice(Address.fromString(mNativeAddr), 18)
     if (nativeTokenPriceUSD.gt(zeroBD)) {
+      let amountUnderlying = market.exchangeRate.times(market.totalSupply)
       market.borrowRewardNative = getRewardEmission(
         nativeTokenPriceUSD,
-        amountUnderlying,
+        market.totalBorrows,
         market.underlyingPriceUSD,
         market.borrowRewardSpeedNative,
       )
@@ -220,7 +220,7 @@ export function updateMarket(
         if (protocolTokenPriceUSD.gt(zeroBD)) {
           market.borrowRewardProtocol = getRewardEmission(
             protocolTokenPriceUSD,
-            amountUnderlying,
+            market.totalBorrows,
             market.underlyingPriceUSD,
             market.borrowRewardSpeedProtocol,
           )
