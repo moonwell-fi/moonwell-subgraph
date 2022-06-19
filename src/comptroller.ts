@@ -11,10 +11,16 @@ import {
   BorrowRewardSpeedUpdated,
   NewBorrowCap,
   ActionPaused1 as MTokenActionPaused,
+  DistributedSupplierReward,
+  DistributedBorrowerReward,
 } from '../generated/Comptroller/Comptroller'
 
 import { CToken } from '../generated/templates'
-import { Market, Account, Comptroller } from '../generated/schema'
+import {
+  Market,
+  Account,
+  Comptroller,
+} from '../generated/schema'
 import {
   mantissaFactorBD,
   updateCommonCTokenStats,
@@ -22,6 +28,7 @@ import {
   getOrCreateComptroller,
   ProtocolTokenRewardType,
   NativeTokenRewardType,
+  getOrCreateMarketAccount2,
 } from './helpers'
 import { createMarket } from './markets'
 import { Feed } from '../generated/templates'
@@ -62,7 +69,7 @@ export function handleMarketEntered(event: MarketEntered): void {
   market.borrowerCount = market.borrowerCount + 1
   market.save()
 
-  let accountID = event.params.account.toHex()
+  let accountID = event.params.account.toHexString()
   let account = Account.load(accountID)
   if (account == null) {
     createAccount(accountID)
@@ -79,8 +86,11 @@ export function handleMarketEntered(event: MarketEntered): void {
   )
   cTokenStats.enteredMarket = true
   cTokenStats.save()
+
+  getOrCreateMarketAccount2(marketID, accountID);
 }
 
+// TODO: delete associated MarketAccount2
 export function handleMarketExited(event: MarketExited): void {
   let marketID = event.params.mToken.toHexString()
   let market = Market.load(marketID)
@@ -129,7 +139,6 @@ export function handleNewCollateralFactor(event: NewCollateralFactor): void {
   }
 }
 
-// This should be the first event acccording to etherscan but it isn't.... price oracle is. weird
 export function handleNewLiquidationIncentive(event: NewLiquidationIncentive): void {
   let comptroller = getOrCreateComptroller()
   comptroller.liquidationIncentive = event.params.newLiquidationIncentiveMantissa
@@ -206,4 +215,32 @@ export function handleMTokenActionPaused(event: MTokenActionPaused): void {
     market.borrowPaused = event.params.pauseState
   }
   market.save()
+}
+
+export function handleDistributedSupplierReward(event: DistributedSupplierReward): void {
+  let rewardType = event.params.tokenType
+  let marketID = event.params.mToken.toHexString()
+  let supplier = event.params.borrower.toHexString()
+
+  let marketAccount2 = getOrCreateMarketAccount2(marketID, supplier);
+  if (rewardType == ProtocolTokenRewardType) {
+    marketAccount2.rewardSupplierIndexProtocol = event.params.wellBorrowIndex
+  } else if (rewardType == NativeTokenRewardType) {
+    marketAccount2.rewardSupplierIndexNative = event.params.wellBorrowIndex
+  }
+  marketAccount2.save()
+}
+
+export function handleDistributedBorrowerReward(event: DistributedBorrowerReward): void {
+  let rewardType = event.params.tokenType
+  let marketID = event.params.mToken.toHexString()
+  let borrower = event.params.borrower.toHexString()
+
+  let marketAccount2 = getOrCreateMarketAccount2(marketID, borrower);
+  if (rewardType == ProtocolTokenRewardType) {
+    marketAccount2.rewardBorrowerIndexProtocol = event.params.wellBorrowIndex
+  } else if (rewardType == NativeTokenRewardType) {
+    marketAccount2.rewardBorrowerIndexNative = event.params.wellBorrowIndex
+  }
+  marketAccount2.save()
 }

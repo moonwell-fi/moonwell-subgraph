@@ -447,6 +447,50 @@ type RepayEvent implements UnderlyingTransfer @entity {
   payer: String!
 }
 
+type Account2 @entity {
+  # account address
+  id: ID!
+  accountLiquidity: BigInt!
+  accountShortfall: BigInt!
+  rewardAccruedNative: BigInt!
+  rewardAccruedProtocol: BigInt!
+  govTokenBalance: BigInt!
+  govTokenAllowance: BigInt!
+  safetyModuleTokenBalance: BigInt!
+  stakersCooldown: BigInt!
+  userStakingIndex: BigInt!
+  stakerRewardsToClaim: BigInt!
+  marketAccounts: [MarketAccount2!]! @derivedFrom(field: "account")
+}
+
+type MarketAccount2 @entity {
+  # {market address}-{account address}
+  id: ID!
+  account: Account2!
+  market: Market!
+
+  tokenBalance: BigInt!
+  tokenAllowance: BigInt!
+  mTokenBalance: BigInt!
+  borrowBalanceStored: BigInt!
+  rewardSupplierIndexProtocol: BigInt!
+  rewardSupplierIndexNative: BigInt!
+  rewardBorrowerIndexProtocol: BigInt!
+  rewardBorrowerIndexNative: BigInt!
+}
+
+type SafetyModule @entity {
+  # set to 1
+  id: ID!
+  cooldownSeconds: BigInt!
+  unstakeWindow: BigInt!
+  distributionEnd: BigInt!
+  emissionPerSecond: BigInt!
+  totalSupply: BigInt!
+  lastUpdateTimestamp: BigInt!
+  globalIndex: BigInt!
+}
+
 type MarketDailySnapshot @entity {
   " {market smart contract address}-{epoch days} "
   id: ID!

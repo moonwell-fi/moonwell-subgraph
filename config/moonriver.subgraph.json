@@ -3,5 +3,7 @@
   "comptrollerAddr": "0x0b7a0EAA884849c6Af7a129e899536dDDcA4905E",
   "comptrollerStartBlock": 1461988,
   "governorAddr": "0x2BE2e230e89c59c8E20E633C524AD2De246e7370",
-  "governorStartBlock": 2762967
+  "governorStartBlock": 2762967,
+  "safetyModuleAddr": "0xCd76e63f3AbFA864c53b4B98F57c1aA6539FDa3a",
+  "safetyModuleStartBlock": 1513267
 }

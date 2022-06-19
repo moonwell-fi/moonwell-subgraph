@@ -13,6 +13,8 @@ import {
   AccountCTokenTransaction,
   Comptroller,
   MarketDailySnapshot,
+  Account2,
+  MarketAccount2,
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import config from '../config/config'
@@ -214,6 +216,49 @@ export function getOrCreateAccountCTokenTransaction(
   }
 
   return transaction
+}
+
+export function getOrCreateAccount2(accountID: string): Account2 {
+  let account = Account2.load(accountID)
+  if (!account) {
+    account = new Account2(accountID)
+    account.accountLiquidity = zeroBI
+    account.accountShortfall = zeroBI
+    account.rewardAccruedNative = zeroBI
+    account.rewardAccruedProtocol = zeroBI
+    account.govTokenBalance = zeroBI
+    account.govTokenAllowance = zeroBI
+    account.safetyModuleTokenBalance = zeroBI
+    account.stakersCooldown = zeroBI
+    account.userStakingIndex = zeroBI
+    account.stakerRewardsToClaim = zeroBI
+    account.save()
+  }
+  return account;
+}
+
+export function getOrCreateMarketAccount2(
+  marketID: string,
+  accountID: string,
+): MarketAccount2 {
+  getOrCreateAccount2(accountID);
+  let id = marketID.concat('-').concat(accountID)
+  let marketAccount = MarketAccount2.load(id)
+  if (!marketAccount) {
+    marketAccount = new MarketAccount2(id)
+    marketAccount.market = marketID
+    marketAccount.account = accountID
+    marketAccount.tokenBalance = zeroBI
+    marketAccount.tokenAllowance = zeroBI
+    marketAccount.mTokenBalance = zeroBI
+    marketAccount.borrowBalanceStored = zeroBI
+    marketAccount.rewardBorrowerIndexNative = zeroBI
+    marketAccount.rewardBorrowerIndexProtocol = zeroBI
+    marketAccount.rewardSupplierIndexNative = zeroBI
+    marketAccount.rewardSupplierIndexProtocol = zeroBI
+    marketAccount.save()
+  }
+  return marketAccount
 }
 
 export function getOrElse<T>(result: ethereum.CallResult<T>, defaultValue: T): T {

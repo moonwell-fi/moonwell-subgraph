@@ -1,4 +1,4 @@
-import { log } from '@graphprotocol/graph-ts'
+import { Address, log } from '@graphprotocol/graph-ts'
 import {
   Mint,
   Redeem,
@@ -20,7 +20,11 @@ import {
   TransferEvent,
   BorrowEvent,
   RepayEvent,
+  MarketAccount2,
+  Account2,
 } from '../generated/schema'
+import { GovToken } from '../generated/templates/CToken/GovToken'
+import config from '../config/config'
 
 import { snapshotMarket, updateMarket } from './markets'
 import {
@@ -29,7 +33,13 @@ import {
   exponentToBigDecimal,
   cTokenDecimalsBD,
   cTokenDecimals,
+  ProtocolTokenRewardType,
+  NativeTokenRewardType,
+  getOrCreateAccount2,
+  getOrCreateMarketAccount2,
 } from './helpers'
+import { Comptroller } from '../generated/Comptroller/Comptroller'
+import { ERC20 } from '../generated/templates/CToken/ERC20'
 
 /* Account supplies assets into market and receives cTokens in exchange
  *
@@ -70,6 +80,8 @@ export function handleMint(event: Mint): void {
   mint.cTokenSymbol = market.symbol
   mint.underlyingAmount = underlyingAmount
   mint.save()
+
+  updateMarketAccount2(marketID, event.params.minter.toHexString())
 }
 
 /*  Account supplies cTokens into market and receives underlying asset in exchange
@@ -85,7 +97,8 @@ export function handleMint(event: Mint): void {
  *    No need to update cTokenBalance, handleTransfer() will
  */
 export function handleRedeem(event: Redeem): void {
-  let market = Market.load(event.address.toHexString())!
+  let marketID = event.address.toHexString()
+  let market = Market.load(marketID)!
   let redeemID = event.transaction.hash
     .toHexString()
     .concat('-')
@@ -109,6 +122,8 @@ export function handleRedeem(event: Redeem): void {
   redeem.cTokenSymbol = market.symbol
   redeem.underlyingAmount = underlyingAmount
   redeem.save()
+
+  updateMarketAccount2(marketID, event.params.redeemer.toHexString())
 }
 
 /* Borrow assets from the protocol. All values either ETH or ERC20
@@ -180,6 +195,12 @@ export function handleBorrow(event: Borrow): void {
   borrow.blockTime = event.block.timestamp.toI32()
   borrow.underlyingSymbol = market.underlyingSymbol
   borrow.save()
+
+  let marketAccount2 = getOrCreateMarketAccount2(marketID, accountID);
+  marketAccount2.borrowBalanceStored = event.params.accountBorrows
+  marketAccount2.save()
+
+  updateMarketAccount2(marketID, event.params.borrower.toHexString())
 }
 
 /* Repay some amount borrowed. Anyone can repay anyones balance
@@ -197,7 +218,8 @@ export function handleBorrow(event: Borrow): void {
  *    repay.
  */
 export function handleRepayBorrow(event: RepayBorrow): void {
-  let market = Market.load(event.address.toHexString())!
+  let marketID = event.address.toHexString()
+  let market = Market.load(marketID)!
   let accountID = event.params.borrower.toHex()
   let account = Account.load(accountID)
   if (account == null) {
@@ -254,6 +276,8 @@ export function handleRepayBorrow(event: RepayBorrow): void {
   repay.underlyingSymbol = market.underlyingSymbol
   repay.payer = event.params.payer.toHexString()
   repay.save()
+
+  updateMarketAccount2(marketID, event.params.payer.toHexString())
 }
 
 /*
@@ -293,7 +317,8 @@ export function handleLiquidateBorrow(event: LiquidateBorrow): void {
   // asset. They seize one of potentially many types of cToken collateral of
   // the underwater borrower. So we must get that address from the event, and
   // the repay token is the event.address
-  let marketRepayToken = Market.load(event.address.toHexString())!
+  let marketID = event.address.toHexString()
+  let marketRepayToken = Market.load(marketID)!
   let marketCTokenLiquidated = Market.load(event.params.mTokenCollateral.toHexString())!
   let mintID = event.transaction.hash
     .toHexString()
@@ -319,6 +344,8 @@ export function handleLiquidateBorrow(event: LiquidateBorrow): void {
   liquidation.underlyingRepayAmount = underlyingRepayAmount
   liquidation.cTokenSymbol = marketCTokenLiquidated.symbol
   liquidation.save()
+
+  updateMarketAccount2(marketID, event.params.liquidator.toHexString())
 }
 
 /* Transferring of cTokens
@@ -352,10 +379,11 @@ export function handleTransfer(event: Transfer): void {
 */
   let cTokenContract = CToken.bind(event.address)
   // check to
-  let balanceOfToAccountResult = cTokenContract.try_balanceOf(event.params.to)
+  let toAccount = event.params.to
+  let balanceOfToAccountResult = cTokenContract.try_balanceOf(toAccount)
   if (balanceOfToAccountResult.reverted) {
     log.warning('[handleTransfer] try_balanceOf({}) on {} reverted', [
-      event.params.to.toHexString(),
+      toAccount.toHexString(),
       marketID,
     ])
   } else {
@@ -365,10 +393,11 @@ export function handleTransfer(event: Transfer): void {
     }
   }
   // check from
-  let balanceOfFromAccountResult = cTokenContract.try_balanceOf(event.params.from)
+  let fromAccount = event.params.from
+  let balanceOfFromAccountResult = cTokenContract.try_balanceOf(fromAccount)
   if (balanceOfFromAccountResult.reverted) {
     log.warning('[handleTransfer] try_balanceOf({}) on {} reverted', [
-      event.params.from.toHexString(),
+      fromAccount.toHexString(),
       marketID,
     ])
   } else {
@@ -485,4 +514,123 @@ export function handleNewMarketInterestRateModel(
   let market = Market.load(marketID)!
   market.interestRateModelAddress = event.params.newInterestRateModel.toHexString()
   market.save()
+}
+
+function updateMarketAccount2(marketID: string, accountID: string): void {
+  let account2 = getOrCreateAccount2(accountID);
+
+  let accountAddress = Address.fromString(accountID)
+  let contract = Comptroller.bind(Address.fromString(config.comptrollerAddr))
+  let getAccountLiquidityResult = contract.try_getAccountLiquidity(accountAddress)
+  if (getAccountLiquidityResult.reverted) {
+    log.warning('[updateMarketAccount2] try_getAccountLiquidity({}) on {} reverted', [
+      accountID,
+      config.comptrollerAddr,
+    ])
+  } else {
+    account2.accountLiquidity = getAccountLiquidityResult.value.getValue1()
+    account2.accountShortfall = getAccountLiquidityResult.value.getValue2()
+  }
+
+  let rewardAccruedProtocolResult = contract.try_rewardAccrued(
+    ProtocolTokenRewardType,
+    accountAddress,
+  )
+  if (rewardAccruedProtocolResult.reverted) {
+    log.warning('[updateMarketAccount2] try_rewardAccrued({}, {}) on {} reverted', [
+      ProtocolTokenRewardType.toString(),
+      accountID,
+      config.comptrollerAddr,
+    ])
+  } else {
+    account2.rewardAccruedProtocol = rewardAccruedProtocolResult.value
+  }
+  let nativeRewardAccruedResult = contract.try_rewardAccrued(
+    NativeTokenRewardType,
+    accountAddress,
+  )
+  if (nativeRewardAccruedResult.reverted) {
+    log.warning('[updateMarketAccount2] try_rewardAccrued({}, {}) on {} reverted', [
+      NativeTokenRewardType.toString(),
+      accountID,
+      config.comptrollerAddr,
+    ])
+  } else {
+    account2.rewardAccruedNative = nativeRewardAccruedResult.value
+  }
+  let govTokenContract = GovToken.bind(Address.fromString(config.govTokenAddr))
+
+  let govTokenBalanceResult = govTokenContract.try_balanceOf(accountAddress)
+  if (govTokenBalanceResult.reverted) {
+    log.warning('[updateMarketAccount2] try_balanceOf({}) on {} reverted', [
+      accountID,
+      config.govTokenAddr,
+    ])
+  } else {
+    account2.govTokenBalance = govTokenBalanceResult.value
+  }
+
+  let govTokenAllowanceResult = govTokenContract.try_allowance(
+    accountAddress,
+    Address.fromString(config.safetyModuleAddr),
+  )
+  if (govTokenAllowanceResult.reverted) {
+    log.warning('[updateMarketAccount2] try_allowance({}, {}) on {} reverted', [
+      accountID,
+      config.safetyModuleAddr,
+      config.govTokenAddr,
+    ])
+  } else {
+    account2.govTokenAllowance = govTokenAllowanceResult.value
+  }
+  account2.save()
+
+  let marketAccount2 = getOrCreateMarketAccount2(marketID, accountID);
+
+  let cTokenContract = CToken.bind(Address.fromString(marketID))
+  let cTokenBalanceResult = cTokenContract.try_balanceOf(Address.fromString(accountID))
+  if (cTokenBalanceResult.reverted) {
+    log.warning('[updateMarketAccount2] try_balanceOf({}) on {} reverted', [
+      accountID,
+      marketID,
+    ])
+  } else {
+    marketAccount2.mTokenBalance = cTokenBalanceResult.value
+  }
+
+  let market = Market.load(marketID)
+  if (!market) {
+    log.warning('[updateMarketAccount2] market {} not found', [marketID])
+    return
+  }
+  // subgraph won't be able to fetch native token balance and allowance
+  // by native token, i mean ETH for ethereum mainnet, MOVR for moonriver
+  // in moonwell subgraph, a native token has address 0x0000000000000000000000000000000000000000
+  if (market.underlyingAddress == '0x0000000000000000000000000000000000000000') {
+    return
+  }
+  let tokenContract = ERC20.bind(Address.fromString(market.underlyingAddress))
+  let tokenBalanceResult = tokenContract.try_balanceOf(accountAddress)
+  if (tokenBalanceResult.reverted) {
+    log.warning('[updateMarketAccount2] try_balanceOf({}) on {} reverted', [
+      accountID,
+      market.underlyingAddress,
+    ])
+  } else {
+    marketAccount2.tokenBalance = tokenBalanceResult.value
+  }
+  let tokenAllowanceResult = tokenContract.try_allowance(
+    accountAddress,
+    Address.fromString(config.safetyModuleAddr),
+  )
+  if (tokenAllowanceResult.reverted) {
+    log.warning('[updateMarketAccount2] try_allowance({}, {}) on {} reverted', [
+      accountID,
+      config.safetyModuleAddr,
+      market.underlyingAddress,
+    ])
+  } else {
+    marketAccount2.tokenAllowance = tokenAllowanceResult.value
+  }
+  marketAccount2.save()
 }
