@@ -6,6 +6,8 @@ import {
   AccountCTokenTransaction,
   Comptroller,
   MarketDailySnapshot,
+  Account2,
+  MarketAccount2,
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import { comptrollerAddr } from './constants'
@@ -191,4 +193,40 @@ export function getOrCreateAccountCTokenTransaction(
   }
 
   return transaction
+}
+
+export function createAccount2(id: string): Account2 {
+  let account = new Account2(id)
+  account.accountLiquidity = zeroBI
+  account.accountShortfall = zeroBI
+  account.rewardAccruedNative = zeroBI
+  account.rewardAccruedProtocol = zeroBI
+  account.govTokenBalance = zeroBI
+  account.govTokenAllowance = zeroBI
+  account.safetyModuleTokenBalance = zeroBI
+  account.stakersCooldown = zeroBI
+  account.userStakingIndex = zeroBI
+  account.stakerRewardsToClaim = zeroBI
+  account.save()
+  return account
+}
+
+export function createMarketAccount2(
+  marketID: string,
+  accountID: string,
+): MarketAccount2 {
+  let id = marketID.concat('-').concat(accountID)
+  let marketAccount2 = new MarketAccount2(id)
+  marketAccount2.market = marketID
+  marketAccount2.account = accountID
+  marketAccount2.tokenBalance = zeroBI
+  marketAccount2.tokenAllowance = zeroBI
+  marketAccount2.mTokenBalance = zeroBI
+  marketAccount2.borrowBalanceStored = zeroBI
+  marketAccount2.rewardBorrowerIndexNative = zeroBI
+  marketAccount2.rewardBorrowerIndexProtocol = zeroBI
+  marketAccount2.rewardSupplierIndexNative = zeroBI
+  marketAccount2.rewardSupplierIndexProtocol = zeroBI
+  marketAccount2.save()
+  return marketAccount2
 }

@@ -1,5 +1,7 @@
 {
   "network": "moonbeam",
   "comptrollerAddr": "0x8E00D5e02E65A19337Cdba98bbA9F84d4186a180",
-  "comptrollerStartBlock": 1284556
+  "comptrollerStartBlock": 1284556,
+  "safetyModuleAddr": "0x8568A675384d761f36eC269D695d6Ce4423cfaB1",
+  "safetyModuleStartBlock": 1012189
 }

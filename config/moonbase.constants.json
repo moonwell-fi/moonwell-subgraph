@@ -4,5 +4,7 @@
   "mNativeAddr": "0xe6bBc5845C6E4B28063AB5e468a7C6C47d3B3944",
   "protocolNativePairAddr": "0x54c7E9cE658A28E1AD3d1B8A91eb8AB8F5316Bc6",
   "protocolNativePairStartBlock": 1721365,
-  "protocolNativePairProtocolIndex": 0
+  "protocolNativePairProtocolIndex": 0,
+  "govTokenAddr": "0x0008CB35Af4696382f25fF4db1310326AC713799",
+  "safetyModuleAddr": "0xdC693646135C5aFF4e317AEEfaC066c8304D0233"
 }
