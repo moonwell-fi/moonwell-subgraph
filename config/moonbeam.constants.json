@@ -1,7 +1,7 @@
 {
-  "comptrollerAddr": "0xEDf81fa5E66D042673e026f3E15aF3b93d7fa3dd",
+  "comptrollerAddr": "0x8E00D5e02E65A19337Cdba98bbA9F84d4186a180",
   "nativeToken": "GLMR",
-  "mNativeAddr": "0x061e39fcB60498F220E9a80a7Cc987fa85Fa27b3",
-  "protocolNativePairAddr": "TODO",
-  "protocolNativePairStartBlock": 9999999
+  "mNativeAddr": "0x091608f4e4a15335145be0A279483C0f8E4c7955",
+  "protocolNativePairAddr": "0xb536c1f9a157b263b70a9a35705168acc0271742",
+  "protocolNativePairStartBlock": 1277865
 }
