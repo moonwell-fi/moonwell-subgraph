@@ -336,7 +336,7 @@ function getOneProtocolTokenInNativeToken(): BigDecimal {
   }
   let MOVRReserve = getReservesResult.value.get_reserve0()
   let MFAMReserve = getReservesResult.value.get_reserve1()
-  return MOVRReserve.toBigDecimal().div(MFAMReserve.toBigDecimal())
+  return MFAMReserve.toBigDecimal().div(MOVRReserve.toBigDecimal())
 }
 
 function getRewardEmission(
