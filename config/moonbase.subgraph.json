@@ -1,5 +1,7 @@
 {
   "network": "mbase",
   "comptrollerAddr": "0x4F21A80772e03eA2ECa559f2dE730Aa5bfC6dc30",
-  "comptrollerStartBlock": 1674849
+  "comptrollerStartBlock": 1674849,
+  "safetyModuleAddr": "0xdC693646135C5aFF4e317AEEfaC066c8304D0233",
+  "safetyModuleStartBlock": 1720399
 }

@@ -49,6 +49,45 @@ dataSources:
           handler: handleBorrowRewardSpeedUpdated
         - event: NewBorrowCap(indexed address,uint256)
           handler: handleNewBorrowCap
+        - event: DistributedSupplierReward(indexed uint8,indexed address,indexed address,uint256,uint256)
+          handler: handleDistributedSupplierReward
+        - event: DistributedBorrowerReward(indexed uint8,indexed address,indexed address,uint256,uint256)
+          handler: handleDistributedBorrowerReward
+  - kind: ethereum/contract
+    name: SafetyModule
+    network: {{ network }}
+    source:
+      address: '{{ safetyModuleAddr }}'
+      abi: SafetyModule
+      startBlock: {{ safetyModuleStartBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/safetyModule.ts
+      entities:
+        - Account2
+        - SafetyModule
+      abis:
+        - name: SafetyModule
+          file: ./abis/safetyModule.json
+      eventHandlers:
+        - event: AssetConfigUpdated(indexed address,uint256)
+          handler: handleAssetConfigUpdated
+        - event: AssetIndexUpdated(indexed address,uint256)
+          handler: handleAssetIndexUpdated
+        - event: UserIndexUpdated(indexed address,indexed address,uint256)
+          handler: handleUserIndexUpdated
+        - event: RewardsAccrued(address,uint256)
+          handler: handlerRewardsAccrued
+        - event: RewardsClaimed(indexed address,indexed address,uint256)
+          handler: handleRewardsClaimed
+        - event: Staked(indexed address,indexed address,uint256)
+          handler: handleStaked
+        - event: Redeem(indexed address,indexed address,uint256)
+          handler: handleRedeem
+        - event: Cooldown(indexed address)
+          handler: handleCooldown
 templates:
   - name: CToken
     kind: ethereum/contract
@@ -74,6 +113,8 @@ templates:
           file: ./abis/erc20.json
         - name: SolarbeamLPToken
           file: ./abis/solarbeamLPToken.json
+        - name: GovToken
+          file: ./abis/govtoken.json
       eventHandlers:
         - event: Mint(address,uint256,uint256)
           handler: handleMint
