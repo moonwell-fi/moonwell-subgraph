@@ -29,6 +29,7 @@ import {
   mNativeAddr,
   protocolNativePairAddr,
   protocolNativePairStartBlock,
+  protocolNativePairProtocolIndex,
 } from './constants'
 
 function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
@@ -215,8 +216,9 @@ export function updateMarket(
       )
       if (blockNumber >= protocolNativePairStartBlock) {
         // get protocol token price
-        let protocolTokenPriceUSD =
-          getOneProtocolTokenInNativeToken().times(nativeTokenPriceUSD)
+        let protocolTokenPriceUSD = getOneProtocolTokenInNativeToken(
+          protocolNativePairProtocolIndex,
+        ).times(nativeTokenPriceUSD)
         if (protocolTokenPriceUSD.gt(zeroBD)) {
           market.borrowRewardProtocol = getRewardEmission(
             protocolTokenPriceUSD,
@@ -327,16 +329,20 @@ export function snapshotMarket(marketAddress: Address, blockTimestamp: i32): voi
   snapshot.save()
 }
 
-function getOneProtocolTokenInNativeToken(): BigDecimal {
+function getOneProtocolTokenInNativeToken(protocolIndex: i32): BigDecimal {
   let lpTokenContract = SolarbeamLPToken.bind(Address.fromString(protocolNativePairAddr))
   let getReservesResult = lpTokenContract.try_getReserves()
   if (getReservesResult.reverted) {
     log.warning('[getOneProtocolTokenInNativeToken] reverted', [])
     return zeroBD
   }
-  let MOVRReserve = getReservesResult.value.get_reserve0()
-  let MFAMReserve = getReservesResult.value.get_reserve1()
-  return MOVRReserve.toBigDecimal().div(MFAMReserve.toBigDecimal())
+  let reserve0 = getReservesResult.value.get_reserve0().toBigDecimal()
+  let reserve1 = getReservesResult.value.get_reserve1().toBigDecimal()
+  if (protocolIndex == 1) {
+    return reserve0.div(reserve1)
+  } else {
+    return reserve1.div(reserve0)
+  }
 }
 
 function getRewardEmission(
