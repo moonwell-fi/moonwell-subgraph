@@ -1,7 +1,8 @@
 import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
-import { Market } from '../generated/schema'
+import { Comptroller, Market } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import { PriceOracle } from '../generated/templates/CToken/PriceOracle'
+import { FeedProxy } from '../generated/Comptroller/FeedProxy'
 import { ERC20 } from '../generated/templates/CToken/ERC20'
 import { AccrueInterest, CToken } from '../generated/templates/CToken/CToken'
 import { SolarbeamLPToken } from '../generated/templates/CToken/SolarbeamLPToken'
@@ -12,7 +13,6 @@ import {
   mantissaFactorBD,
   cTokenDecimalsBD,
   zeroBD,
-  getOrCreateComptroller,
   convertSecondRateMantissaToAPY,
   zeroBI,
   daysPerYear,
@@ -31,18 +31,6 @@ import {
   protocolNativePairStartBlock,
   protocolNativePairProtocolIndex,
 } from './constants'
-
-function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
-  let comptroller = getOrCreateComptroller()
-  let oracle = PriceOracle.bind(Address.fromString(comptroller.priceOracle))
-  let tryPrice = oracle.try_getUnderlyingPrice(token)
-
-  return tryPrice.reverted
-    ? zeroBD
-    : tryPrice.value
-        .toBigDecimal()
-        .div(exponentToBigDecimal(18 - underlyingDecimals + 18))
-}
 
 export function createMarket(marketID: string): Market | null {
   let market = new Market(marketID)
@@ -122,20 +110,20 @@ export function createMarket(marketID: string): Market | null {
   market.accrualBlockTimestamp = 0
   market.blockTimestamp = 0
 
+  // find price feed of the market
+  let comptroller = Comptroller.load('1')!
+  let oracle = PriceOracle.bind(Address.fromString(comptroller.priceOracle))
+
+  // for some reason, feed symbols are set differently for native token vs the rest
+  // for example, setFeed(mMOVR, feed) for MOVR market, but setFeed(USDC, feed) for USDC market
+  let symbol =
+    market.underlyingSymbol == nativeToken ? market.symbol : market.underlyingSymbol
+  let feedProxyAddress = oracle.getFeed(symbol)
+  let feedProxy = FeedProxy.bind(feedProxyAddress)
+  let feed = feedProxy.aggregator()
+  market._feed = feed.toHexString()
+
   return market
-}
-
-function getETHinUSD(): BigDecimal {
-  let comptroller = getOrCreateComptroller()
-  let oracleAddress = Address.fromString(comptroller.priceOracle)
-  let oracle = PriceOracle.bind(oracleAddress)
-  let tryPrice = oracle.try_getUnderlyingPrice(Address.fromString(mNativeAddr))
-
-  let ethPriceInUSD = tryPrice.reverted
-    ? zeroBD
-    : tryPrice.value.toBigDecimal().div(mantissaFactorBD)
-
-  return ethPriceInUSD
 }
 
 export function updateMarket(
@@ -157,19 +145,6 @@ export function updateMarket(
     let comptrollerContract = ComptrollerContract.bind(
       Address.fromString(comptrollerAddr),
     )
-
-    let ethPriceInUSD = getETHinUSD()
-
-    // if cETH, we only update USD price
-    if (addrEq(market.id, mNativeAddr)) {
-      market.underlyingPriceUSD = ethPriceInUSD.truncate(market.underlyingDecimals)
-    } else {
-      let tokenPriceUSD = getTokenPrice(marketAddress, market.underlyingDecimals)
-      market.underlyingPrice = tokenPriceUSD
-        .div(ethPriceInUSD)
-        .truncate(market.underlyingDecimals)
-      market.underlyingPriceUSD = tokenPriceUSD.truncate(market.underlyingDecimals)
-    }
 
     market.accrualBlockTimestamp = contract.accrualBlockTimestamp().toI32()
     market.blockTimestamp = blockTimestamp
@@ -198,40 +173,42 @@ export function updateMarket(
       .truncate(market.underlyingDecimals)
     market.borrowIndex = event.params.borrowIndex
 
-    // get native token price
-    let nativeTokenPriceUSD = getTokenPrice(Address.fromString(mNativeAddr), 18)
-    if (nativeTokenPriceUSD.gt(zeroBD)) {
-      let amountUnderlying = market.exchangeRate.times(market.totalSupply)
-      market.borrowRewardNative = getRewardEmission(
-        nativeTokenPriceUSD,
-        market.totalBorrows,
-        market.underlyingPriceUSD,
-        market.borrowRewardSpeedNative,
-      )
-      market.supplyRewardNative = getRewardEmission(
-        nativeTokenPriceUSD,
-        amountUnderlying,
-        market.underlyingPriceUSD,
-        market.supplyRewardSpeedNative,
-      )
-      if (blockNumber >= protocolNativePairStartBlock) {
-        // get protocol token price
-        let protocolTokenPriceUSD = getOneProtocolTokenInNativeToken(
-          protocolNativePairProtocolIndex,
-        ).times(nativeTokenPriceUSD)
-        if (protocolTokenPriceUSD.gt(zeroBD)) {
-          market.borrowRewardProtocol = getRewardEmission(
-            protocolTokenPriceUSD,
-            market.totalBorrows,
-            market.underlyingPriceUSD,
-            market.borrowRewardSpeedProtocol,
-          )
-          market.supplyRewardProtocol = getRewardEmission(
-            protocolTokenPriceUSD,
-            amountUnderlying,
-            market.underlyingPriceUSD,
-            market.supplyRewardSpeedProtocol,
-          )
+    let nativeMarket = Market.load(mNativeAddr)
+    if (nativeMarket) {
+      let nativeTokenPriceUSD = nativeMarket.underlyingPriceUSD
+      if (nativeTokenPriceUSD.gt(zeroBD)) {
+        let amountUnderlying = market.exchangeRate.times(market.totalSupply)
+        market.borrowRewardNative = getRewardEmission(
+          nativeTokenPriceUSD,
+          market.totalBorrows,
+          market.underlyingPriceUSD,
+          market.borrowRewardSpeedNative,
+        )
+        market.supplyRewardNative = getRewardEmission(
+          nativeTokenPriceUSD,
+          amountUnderlying,
+          market.underlyingPriceUSD,
+          market.supplyRewardSpeedNative,
+        )
+        if (blockNumber >= protocolNativePairStartBlock) {
+          // get protocol token price
+          let protocolTokenPriceUSD = getOneProtocolTokenInNativeToken(
+            protocolNativePairProtocolIndex,
+          ).times(nativeTokenPriceUSD)
+          if (protocolTokenPriceUSD.gt(zeroBD)) {
+            market.borrowRewardProtocol = getRewardEmission(
+              protocolTokenPriceUSD,
+              market.totalBorrows,
+              market.underlyingPriceUSD,
+              market.borrowRewardSpeedProtocol,
+            )
+            market.supplyRewardProtocol = getRewardEmission(
+              protocolTokenPriceUSD,
+              amountUnderlying,
+              market.underlyingPriceUSD,
+              market.supplyRewardSpeedProtocol,
+            )
+          }
         }
       }
     }
