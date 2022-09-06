@@ -1,4 +1,4 @@
-import { log } from '@graphprotocol/graph-ts'
+import { Address, log } from '@graphprotocol/graph-ts'
 import {
   MarketEntered,
   MarketExited,
@@ -13,7 +13,7 @@ import {
 } from '../generated/Comptroller/Comptroller'
 
 import { CToken } from '../generated/templates'
-import { Market, Account } from '../generated/schema'
+import { Market, Account, Comptroller } from '../generated/schema'
 import {
   mantissaFactorBD,
   updateCommonCTokenStats,
@@ -23,6 +23,7 @@ import {
   NativeTokenRewardType,
 } from './helpers'
 import { createMarket } from './markets'
+import { Feed } from '../generated/templates'
 
 export function handleMarketListed(event: MarketListed): void {
   // Dynamically index all new listed tokens
@@ -36,6 +37,14 @@ export function handleMarketListed(event: MarketListed): void {
   }
 
   market.save()
+
+  let comptroller = Comptroller.load('1')!
+  let markets = comptroller._markets
+  markets.push(marketID)
+  comptroller._markets = markets
+  comptroller.save()
+
+  Feed.create(Address.fromString(market._feed))
 }
 
 export function handleMarketEntered(event: MarketEntered): void {

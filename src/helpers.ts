@@ -52,6 +52,7 @@ export function getOrCreateComptroller(): Comptroller {
   let comptroller = Comptroller.load('1')
   if (!comptroller) {
     comptroller = new Comptroller('1')
+    comptroller._markets = []
     let contract = ComptrollerContract.bind(Address.fromString(comptrollerAddr))
 
     let oracleResult = contract.try_oracle()
