@@ -1,4 +1,4 @@
-import { ethereum, log, Address, Bytes } from '@graphprotocol/graph-ts'
+import {ethereum, log, Address, Bytes, BigInt} from '@graphprotocol/graph-ts'
 import {
   BreakGlassGuardianChanged,
   ProposalCanceled,
@@ -49,10 +49,10 @@ export function handleProposalCreated(event: ProposalCreated): void {
   proposal.description = event.params.description
   proposal.canceled = false
   proposal.executed = false
-  proposal.forVotes = 0
-  proposal.againstVotes = 0
-  proposal.abstainVotes = 0
-  proposal.totalVotes = 0
+  proposal.forVotes = BigInt.zero()
+  proposal.againstVotes = BigInt.zero()
+  proposal.abstainVotes = BigInt.zero()
+  proposal.totalVotes = BigInt.zero()
   proposal.save()
 
   newProposalStateChange(event, proposalID, ProposalState.CREATED)
@@ -107,20 +107,19 @@ export function handleVoteCast(event: VoteCast): void {
     return
   }
 
-  let votes = event.params.votes.toI32()
   switch (event.params.voteValue) {
     case GovernanceVoteValue.VOTE_VALUE_YES:
-      proposal.forVotes += votes
+      proposal.forVotes = proposal.forVotes.plus(event.params.votes)
       break
     case GovernanceVoteValue.VOTE_VALUE_NO:
-      proposal.againstVotes += votes
+      proposal.againstVotes = proposal.againstVotes.plus(event.params.votes)
       break
     case GovernanceVoteValue.VOTE_VALUE_ABSTAIN:
-      proposal.abstainVotes += votes
+      proposal.abstainVotes = proposal.abstainVotes.plus(event.params.votes)
       break
     default:
   }
-  proposal.totalVotes += votes
+  proposal.totalVotes = proposal.totalVotes.plus(event.params.votes)
   proposal.save()
 
   let voterID = event.params.voter.toHexString()
@@ -138,7 +137,7 @@ export function handleVoteCast(event: VoteCast): void {
   vote.voter = voterID
   vote.proposal = proposalID
   vote.voteValue = event.params.voteValue
-  vote.votes = votes
+  vote.votes = event.params.votes
   vote.save()
 }
 

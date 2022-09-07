@@ -219,10 +219,10 @@ type Proposal @entity {
   startBlock: BigInt!
   canceled: Boolean!
   executed: Boolean!
-  forVotes: Int!
-  againstVotes: Int!
-  abstainVotes: Int!
-  totalVotes: Int!
+  forVotes: BigInt!
+  againstVotes: BigInt!
+  abstainVotes: BigInt!
+  totalVotes: BigInt!
   description: String!
   stateChanges: [ProposalStateChange!]! @derivedFrom(field: "proposal")
 }
@@ -252,7 +252,7 @@ type Vote @entity {
   voter: Voter!
   proposal: Proposal!
   voteValue: Int!
-  votes: Int!
+  votes: BigInt!
 }
 
 type Proposer @entity {
