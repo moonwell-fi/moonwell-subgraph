@@ -10,6 +10,19 @@ import {
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import { comptrollerAddr } from './constants'
 
+export namespace ProposalState {
+  export const CREATED = 'CREATED'
+  export const CANCELED = 'CANCELED'
+  export const EXECUTED = 'EXECUTED'
+  export const QUEUED = 'QUEUED'
+}
+
+export namespace GovernanceVoteValue {
+  export const VOTE_VALUE_YES = 0
+  export const VOTE_VALUE_NO = 1
+  export const VOTE_VALUE_ABSTAIN = 2
+}
+
 export let ProtocolTokenRewardType = 0
 export let NativeTokenRewardType = 1
 export let mantissaFactor = 18

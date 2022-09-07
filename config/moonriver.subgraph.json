@@ -1,5 +1,7 @@
 {
   "network": "moonriver",
   "comptrollerAddr": "0x0b7a0EAA884849c6Af7a129e899536dDDcA4905E",
-  "comptrollerStartBlock": 1461988
+  "comptrollerStartBlock": 1461988,
+  "governorAddr": "TODO",
+  "governorStartBlock": 9999999
 }
