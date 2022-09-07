@@ -1,0 +1,208 @@
+import { ethereum, log, Address, Bytes } from '@graphprotocol/graph-ts'
+import {
+  BreakGlassGuardianChanged,
+  ProposalCanceled,
+  ProposalCreated,
+  ProposalExecuted,
+  ProposalQueued,
+  ProposalThresholdChanged,
+  QuroumVotesChanged,
+  VoteCast,
+  VotingDelayChanged,
+  VotingPeriodChanged,
+} from '../generated/Governor/Governor'
+import {
+  Governor,
+  Proposal,
+  ProposalStateChange,
+  Proposer,
+  Vote,
+  Voter,
+} from '../generated/schema'
+import { GovernanceVoteValue, ProposalState } from './helpers'
+
+export function handleProposalCreated(event: ProposalCreated): void {
+  let governor = getOrCreateGovernor()
+  governor.proposalCount += 1
+
+  let proposerID = event.params.proposer.toHexString()
+  let proposer = Proposer.load(proposerID)
+  if (!proposer) {
+    proposer = new Proposer(proposerID)
+    proposer.save()
+  }
+
+  let proposalID = event.params.id.toString()
+  let proposal = new Proposal(proposalID)
+  proposal.proposer = proposerID
+    let targets: Bytes[] = []
+    for (let i = 0; i < event.params.targets.length; i++) {
+      targets.push(event.params.targets[i])
+    }
+  proposal.targets = targets
+  proposal.values = event.params.values
+  proposal.signatures = event.params.signatures
+  proposal.calldatas = event.params.calldatas
+  proposal.startTimestamp = event.params.startTimestamp
+  proposal.endTimestamp = event.params.endTimestamp
+  proposal.startBlock = event.block.number
+  proposal.description = event.params.description
+  proposal.canceled = false
+  proposal.executed = false
+  proposal.forVotes = 0
+  proposal.againstVotes = 0
+  proposal.abstainVotes = 0
+  proposal.totalVotes = 0
+  proposal.save()
+
+  newProposalStateChange(event, proposalID, ProposalState.CREATED)
+}
+
+export function handleProposalQueued(event: ProposalQueued): void {
+  let proposalID = event.params.id.toString()
+  let proposal = Proposal.load(proposalID)
+  if (!proposal) {
+    log.warning('[handleProposalQueued] proposal {} not found', [proposalID])
+    return
+  }
+
+  let change = newProposalStateChange(event, proposalID, ProposalState.QUEUED)
+  change.queueEta = event.params.eta
+  change.save()
+}
+
+export function handleProposalExecuted(event: ProposalExecuted): void {
+  let proposalID = event.params.id.toString()
+  let proposal = Proposal.load(proposalID)
+  if (!proposal) {
+    log.warning('[handleProposalExecuted] proposal {} not found', [proposalID])
+    return
+  }
+
+  proposal.executed = true
+  proposal.save()
+
+  newProposalStateChange(event, proposalID, ProposalState.EXECUTED)
+}
+
+export function handleProposalCanceled(event: ProposalCanceled): void {
+  let proposalID = event.params.id.toString()
+  let proposal = Proposal.load(proposalID)
+  if (!proposal) {
+    log.warning('[handleProposalCanceled] proposal {} not found', [proposalID])
+    return
+  }
+
+  proposal.canceled = true
+  proposal.save()
+
+  newProposalStateChange(event, proposalID, ProposalState.CANCELED)
+}
+
+export function handleVoteCast(event: VoteCast): void {
+  let proposalID = event.params.proposalId.toString()
+  let proposal = Proposal.load(proposalID)
+  if (!proposal) {
+    log.warning('[handleVoteCast] proposal {} not found', [proposalID])
+    return
+  }
+
+  let votes = event.params.votes.toI32()
+  switch (event.params.voteValue) {
+    case GovernanceVoteValue.VOTE_VALUE_YES:
+      proposal.forVotes += votes
+      break
+    case GovernanceVoteValue.VOTE_VALUE_NO:
+      proposal.againstVotes += votes
+      break
+    case GovernanceVoteValue.VOTE_VALUE_ABSTAIN:
+      proposal.abstainVotes += votes
+      break
+    default:
+  }
+  proposal.totalVotes += votes
+  proposal.save()
+
+  let voterID = event.params.voter.toHexString()
+  let voter = Voter.load(voterID)
+  if (!voter) {
+    voter = new Voter(voterID)
+    voter.save()
+  }
+
+  let vote = new Vote(
+    event.transaction.hash.toHexString().concat('-').concat(event.logIndex.toString()),
+  )
+  vote.txnHash = event.transaction.hash
+  vote.blockNumber = event.block.number
+  vote.voter = voterID
+  vote.proposal = proposalID
+  vote.voteValue = event.params.voteValue
+  vote.votes = votes
+  vote.save()
+}
+
+export function handleBreakGlassGuardianChanged(event: BreakGlassGuardianChanged): void {
+  let governor = getOrCreateGovernor()
+  governor.breakGlassGuardian = event.params.newValue
+  governor.save()
+}
+
+export function handleProposalThresholdChanged(event: ProposalThresholdChanged): void {
+  let governor = getOrCreateGovernor()
+  governor.proposalThreshold = event.params.newValue.toI32()
+  governor.save()
+}
+
+export function handleQuorumVotesChanged(event: QuroumVotesChanged): void {
+  let governor = getOrCreateGovernor()
+  governor.quorumVotes = event.params.newValue.toI32()
+  governor.save()
+}
+
+export function handleVotingDelayedChanged(event: VotingDelayChanged): void {
+  let governor = getOrCreateGovernor()
+  governor.votingDelay = event.params.newValue.toI32()
+  governor.save()
+}
+
+export function handleVotingPeriodChanged(event: VotingPeriodChanged): void {
+  let governor = getOrCreateGovernor()
+  governor.votingPeriod = event.params.newValue.toI32()
+  governor.save()
+}
+
+function getOrCreateGovernor(): Governor {
+  let governor = Governor.load('1')
+  if (!governor) {
+    governor = new Governor('1')
+    governor.proposalCount = 0
+    governor.quorumVotes = 0
+    governor.proposalThreshold = 0
+    governor.votingDelay = 0
+    governor.proposalMaxOperations = 0
+    governor.votingPeriod = 0
+    governor.breakGlassGuardian = Address.fromString(
+      '0x0000000000000000000000000000000000000000',
+    )
+    governor.save()
+  }
+  return governor
+}
+
+function newProposalStateChange(
+  event: ethereum.Event,
+  proposalID: string,
+  newState: string,
+): ProposalStateChange {
+  let change = new ProposalStateChange(
+    event.transaction.hash.toHexString().concat('-').concat(event.logIndex.toString()),
+  )
+  change.proposal = proposalID
+  change.txnHash = event.transaction.hash
+  change.blockNumber = event.block.number
+  change.newState = newState
+  change.save()
+
+  return change
+}
