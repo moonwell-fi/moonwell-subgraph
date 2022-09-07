@@ -34,6 +34,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
 
   let proposalID = event.params.id.toString()
   let proposal = new Proposal(proposalID)
+  proposal.proposalID = event.params.id.toI32();
   proposal.proposer = proposerID
     let targets: Bytes[] = []
     for (let i = 0; i < event.params.targets.length; i++) {

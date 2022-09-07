@@ -209,6 +209,8 @@ type Governor @entity {
 type Proposal @entity {
   # proposal id
   id: ID!
+  # add this because we want to support range query by proposal id, and the `id` field doesn't support this as it is String
+  proposalID: Int!
   proposer: Proposer!
   targets: [Bytes!]!
   values: [BigInt!]!
