@@ -1,4 +1,4 @@
-import { Address, log } from '@graphprotocol/graph-ts'
+import { Address, log, dataSource } from '@graphprotocol/graph-ts'
 import {
   MarketEntered,
   MarketExited,
@@ -44,7 +44,10 @@ export function handleMarketListed(event: MarketListed): void {
   comptroller._markets = markets
   comptroller.save()
 
-  Feed.create(Address.fromString(market._feed))
+  if (dataSource.network() != "mbase") {
+    // ignore feed on moonbase
+    Feed.create(Address.fromString(market._feed))
+  }
 }
 
 export function handleMarketEntered(event: MarketEntered): void {

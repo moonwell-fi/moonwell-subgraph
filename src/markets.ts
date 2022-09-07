@@ -1,4 +1,4 @@
-import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
+import { Address, BigDecimal, BigInt, log, dataSource } from '@graphprotocol/graph-ts'
 import { Comptroller, Market } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import { PriceOracle } from '../generated/templates/CToken/PriceOracle'
@@ -120,8 +120,12 @@ export function createMarket(marketID: string): Market | null {
     market.underlyingSymbol == nativeToken ? market.symbol : market.underlyingSymbol
   let feedProxyAddress = oracle.getFeed(symbol)
   let feedProxy = FeedProxy.bind(feedProxyAddress)
-  let feed = feedProxy.aggregator()
-  market._feed = feed.toHexString()
+  if (dataSource.network() == 'mbase') {
+    // FeedProxy on moonbase doesn't have aggregator, skip it
+    market._feed = '0x0000000000000000000000000000000000000000'
+  } else {
+    market._feed = feedProxy.aggregator().toHexString()
+  }
 
   return market
 }
