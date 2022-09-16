@@ -1,4 +1,4 @@
-import {ethereum, log, Address, Bytes, BigInt} from '@graphprotocol/graph-ts'
+import { ethereum, log, Address, Bytes, BigInt } from '@graphprotocol/graph-ts'
 import {
   BreakGlassGuardianChanged,
   ProposalCanceled,
@@ -24,6 +24,7 @@ import { GovernanceVoteValue, ProposalState } from './helpers'
 export function handleProposalCreated(event: ProposalCreated): void {
   let governor = getOrCreateGovernor()
   governor.proposalCount += 1
+  governor.save()
 
   let proposerID = event.params.proposer.toHexString()
   let proposer = Proposer.load(proposerID)
@@ -34,12 +35,12 @@ export function handleProposalCreated(event: ProposalCreated): void {
 
   let proposalID = event.params.id.toString()
   let proposal = new Proposal(proposalID)
-  proposal.proposalID = event.params.id.toI32();
+  proposal.proposalID = event.params.id.toI32()
   proposal.proposer = proposerID
-    let targets: Bytes[] = []
-    for (let i = 0; i < event.params.targets.length; i++) {
-      targets.push(event.params.targets[i])
-    }
+  let targets: Bytes[] = []
+  for (let i = 0; i < event.params.targets.length; i++) {
+    targets.push(event.params.targets[i])
+  }
   proposal.targets = targets
   proposal.values = event.params.values
   proposal.signatures = event.params.signatures
@@ -150,13 +151,13 @@ export function handleBreakGlassGuardianChanged(event: BreakGlassGuardianChanged
 
 export function handleProposalThresholdChanged(event: ProposalThresholdChanged): void {
   let governor = getOrCreateGovernor()
-  governor.proposalThreshold = event.params.newValue.toI32()
+  governor.proposalThreshold = event.params.newValue
   governor.save()
 }
 
 export function handleQuorumVotesChanged(event: QuroumVotesChanged): void {
   let governor = getOrCreateGovernor()
-  governor.quorumVotes = event.params.newValue.toI32()
+  governor.quorumVotes = event.params.newValue
   governor.save()
 }
 
@@ -177,11 +178,12 @@ function getOrCreateGovernor(): Governor {
   if (!governor) {
     governor = new Governor('1')
     governor.proposalCount = 0
-    governor.quorumVotes = 0
-    governor.proposalThreshold = 0
-    governor.votingDelay = 0
-    governor.proposalMaxOperations = 0
-    governor.votingPeriod = 0
+    // Get constants from https://github.com/moonwell-fi/contracts-open-source/blob/master/contracts/core/Governance/MoonwellArtemisGovernor.sol
+    governor.quorumVotes = BigInt.fromString('100000000e18')
+    governor.proposalThreshold = BigInt.fromString('400000e18')
+    governor.votingDelay = 60
+    governor.proposalMaxOperations = 25
+    governor.votingPeriod = 3
     governor.breakGlassGuardian = Address.fromString(
       '0x0000000000000000000000000000000000000000',
     )

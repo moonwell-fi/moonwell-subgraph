@@ -198,8 +198,8 @@ type AccountCTokenTransaction @entity {
 type Governor @entity {
   id: ID!
   proposalCount: Int!
-  quorumVotes: Int!
-  proposalThreshold: Int!
+  quorumVotes: BigInt!
+  proposalThreshold: BigInt!
   votingDelay: Int!
   proposalMaxOperations: Int!
   votingPeriod: Int!
