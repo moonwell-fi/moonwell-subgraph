@@ -121,6 +121,9 @@ type Market @entity {
   borrowerCount: Int!
   supplierCount: Int!
 
+  mintPaused: Boolean!
+  borrowPaused: Boolean!
+
   " Price feed address "
   _feed: String!
 }

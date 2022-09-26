@@ -51,6 +51,8 @@ dataSources:
           handler: handleBorrowRewardSpeedUpdated
         - event: NewBorrowCap(indexed address,uint256)
           handler: handleNewBorrowCap
+        - event: ActionPaused(address,string,bool)
+          handler: handleMTokenActionPaused
   - kind: ethereum/contract
     name: Governor
     network: {{ network }}
