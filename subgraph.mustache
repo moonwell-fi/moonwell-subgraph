@@ -53,6 +53,43 @@ dataSources:
           handler: handleNewBorrowCap
         - event: ActionPaused(address,string,bool)
           handler: handleMTokenActionPaused
+  - kind: ethereum/contract
+    name: Governor
+    network: {{ network }}
+    source:
+      address: '{{ governorAddr }}'
+      abi: Governor
+      startBlock: {{ governorStartBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/governor.ts
+      entities: []
+      abis:
+        - name: Governor
+          file: ./abis/governor.json
+      eventHandlers:
+        - event: ProposalCanceled(uint256)
+          handler: handleProposalCanceled
+        - event: ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)
+          handler: handleProposalCreated
+        - event: ProposalExecuted(uint256)
+          handler: handleProposalExecuted
+        - event: ProposalQueued(uint256,uint256)
+          handler: handleProposalQueued
+        - event: VoteCast(address,uint256,uint8,uint256)
+          handler: handleVoteCast
+        - event: BreakGlassGuardianChanged(address,address)
+          handler: handleBreakGlassGuardianChanged
+        - event: ProposalThresholdChanged(uint256,uint256)
+          handler: handleProposalThresholdChanged
+        - event: QuroumVotesChanged(uint256,uint256)
+          handler: handleQuorumVotesChanged
+        - event: VotingDelayChanged(uint256,uint256)
+          handler: handleVotingDelayedChanged
+        - event: VotingPeriodChanged(uint256,uint256)
+          handler: handleVotingPeriodChanged
 templates:
   - name: CToken
     kind: ethereum/contract
