@@ -4,5 +4,6 @@
   "mNativeAddr": "0x091608f4e4a15335145be0A279483C0f8E4c7955",
   "protocolNativePairAddr": "0xb536c1f9a157b263b70a9a35705168acc0271742",
   "protocolNativePairStartBlock": 1277865,
-  "protocolNativePairProtocolIndex": 0
+  "protocolNativePairProtocolIndex": 0,
+  "governorAddr": "0xfc4dfb17101a12c5cec5eedd8e92b5b16557666d"
 }

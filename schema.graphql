@@ -195,6 +195,78 @@ type AccountCTokenTransaction @entity {
   logIndex: BigInt!
 }
 
+type Governor @entity {
+  id: ID!
+  proposalCount: Int!
+  quorumVotes: BigInt!
+  proposalThreshold: BigInt!
+  votingDelay: Int!
+  proposalMaxOperations: Int!
+  votingPeriod: Int!
+  breakGlassGuardian: Bytes!
+}
+
+type Proposal @entity {
+  # proposal id
+  id: ID!
+  # add this because we want to support range query by proposal id, and the `id` field doesn't support this as it is String
+  proposalID: Int!
+  proposer: Proposer!
+  targets: [Bytes!]!
+  values: [BigInt!]!
+  signatures: [String!]!
+  calldatas: [Bytes!]!
+  startTimestamp: BigInt!
+  endTimestamp: BigInt!
+  startBlock: BigInt!
+  canceled: Boolean!
+  executed: Boolean!
+  forVotes: BigInt!
+  againstVotes: BigInt!
+  abstainVotes: BigInt!
+  totalVotes: BigInt!
+  description: String!
+  stateChanges: [ProposalStateChange!]! @derivedFrom(field: "proposal")
+}
+
+enum ProposalState {
+  CREATED
+  CANCELED
+  EXECUTED
+  QUEUED
+}
+
+type ProposalStateChange @entity {
+  # {txn hash}-{log index}
+  id: ID!
+  proposal: Proposal!
+  txnHash: Bytes!
+  blockNumber: BigInt!
+  newState: ProposalState!
+  queueEta: BigInt # only set this field when newState == QUEUED
+}
+
+type Vote @entity {
+  # {txn hash}-{log index}
+  id: ID!
+  txnHash: Bytes!
+  blockNumber: BigInt!
+  voter: Voter!
+  proposal: Proposal!
+  voteValue: Int!
+  votes: BigInt!
+}
+
+type Proposer @entity {
+  id: ID!
+  proposals: [Proposal!]! @derivedFrom(field: "proposer")
+}
+
+type Voter @entity {
+  id: ID!
+  votes: [Vote!]! @derivedFrom(field: "voter")
+}
+
 """
 An interface for a transfer of any cToken. TransferEvent, MintEvent,
 RedeemEvent, and LiquidationEvent all use this interface

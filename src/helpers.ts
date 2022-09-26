@@ -1,5 +1,12 @@
 // For each division by 10, add one to exponent to truncate one significant figure
-import { Address, BigDecimal, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
+import {
+  Address,
+  BigDecimal,
+  BigInt,
+  Bytes,
+  ethereum,
+  log,
+} from '@graphprotocol/graph-ts'
 import {
   AccountCToken,
   Account,
@@ -9,6 +16,21 @@ import {
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import { comptrollerAddr } from './constants'
+
+export const BIGINT_ZERO = BigInt.fromI32(0)
+
+export namespace ProposalState {
+  export const CREATED = 'CREATED'
+  export const CANCELED = 'CANCELED'
+  export const EXECUTED = 'EXECUTED'
+  export const QUEUED = 'QUEUED'
+}
+
+export namespace GovernanceVoteValue {
+  export const VOTE_VALUE_YES = 0
+  export const VOTE_VALUE_NO = 1
+  export const VOTE_VALUE_ABSTAIN = 2
+}
 
 export let ProtocolTokenRewardType = 0
 export let NativeTokenRewardType = 1
@@ -192,4 +214,11 @@ export function getOrCreateAccountCTokenTransaction(
   }
 
   return transaction
+}
+
+export function getOrElse<T>(result: ethereum.CallResult<T>, defaultValue: T): T {
+  if (result.reverted) {
+    return defaultValue
+  }
+  return result.value
 }
