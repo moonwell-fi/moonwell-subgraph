@@ -10,6 +10,7 @@ import {
   VoteCast,
   VotingDelayChanged,
   VotingPeriodChanged,
+  Governor as GovernorContract,
 } from '../generated/Governor/Governor'
 import {
   Governor,
@@ -19,7 +20,8 @@ import {
   Vote,
   Voter,
 } from '../generated/schema'
-import { GovernanceVoteValue, ProposalState } from './helpers'
+import { governorAddr } from './constants'
+import { BIGINT_ZERO, getOrElse, GovernanceVoteValue, ProposalState } from './helpers'
 
 export function handleProposalCreated(event: ProposalCreated): void {
   let governor = getOrCreateGovernor()
@@ -176,16 +178,29 @@ export function handleVotingPeriodChanged(event: VotingPeriodChanged): void {
 function getOrCreateGovernor(): Governor {
   let governor = Governor.load('1')
   if (!governor) {
+    let contract = GovernorContract.bind(Address.fromString(governorAddr))
     governor = new Governor('1')
     governor.proposalCount = 0
-    // Get constants from https://github.com/moonwell-fi/contracts-open-source/blob/master/contracts/core/Governance/MoonwellArtemisGovernor.sol
-    governor.quorumVotes = BigInt.fromString('100000000e18')
-    governor.proposalThreshold = BigInt.fromString('400000e18')
-    governor.votingDelay = 60
-    governor.proposalMaxOperations = 25
-    governor.votingPeriod = 3
-    governor.breakGlassGuardian = Address.fromString(
-      '0x0000000000000000000000000000000000000000',
+    governor.quorumVotes = getOrElse<BigInt>(contract.try_quorumVotes(), BIGINT_ZERO)
+    governor.proposalThreshold = getOrElse<BigInt>(
+      contract.try_proposalThreshold(),
+      BIGINT_ZERO,
+    )
+    governor.votingDelay = getOrElse<BigInt>(
+      contract.try_votingDelay(),
+      BIGINT_ZERO,
+    ).toI32()
+    governor.proposalMaxOperations = getOrElse<BigInt>(
+      contract.try_proposalMaxOperations(),
+      BIGINT_ZERO,
+    ).toI32()
+    governor.votingPeriod = getOrElse<BigInt>(
+      contract.try_votingPeriod(),
+      BIGINT_ZERO,
+    ).toI32()
+    governor.breakGlassGuardian = getOrElse<Address>(
+      contract.try_breakGlassGuardian(),
+      Address.fromString('0x0000000000000000000000000000000000000000'),
     )
     governor.save()
   }
