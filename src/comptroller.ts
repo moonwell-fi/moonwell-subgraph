@@ -10,6 +10,7 @@ import {
   SupplyRewardSpeedUpdated,
   BorrowRewardSpeedUpdated,
   NewBorrowCap,
+  ActionPaused1 as MTokenActionPaused,
 } from '../generated/Comptroller/Comptroller'
 
 import { CToken } from '../generated/templates'
@@ -44,7 +45,7 @@ export function handleMarketListed(event: MarketListed): void {
   comptroller._markets = markets
   comptroller.save()
 
-  if (dataSource.network() != "mbase") {
+  if (dataSource.network() != 'mbase') {
     // ignore feed on moonbase
     Feed.create(Address.fromString(market._feed))
   }
@@ -188,5 +189,21 @@ export function handleNewBorrowCap(event: NewBorrowCap): void {
   }
 
   market.borrowCap = event.params.newBorrowCap
+  market.save()
+}
+
+export function handleMTokenActionPaused(event: MTokenActionPaused): void {
+  let marketID = event.params.mToken.toHexString()
+  let market = Market.load(marketID)
+  if (!market) {
+    log.warning('[handleMTokenActionPaused] market {} not found', [marketID])
+    return
+  }
+
+  if (event.params.action == 'Mint') {
+    market.mintPaused = event.params.pauseState
+  } else if (event.params.action == 'Borrow') {
+    market.borrowPaused = event.params.pauseState
+  }
   market.save()
 }
