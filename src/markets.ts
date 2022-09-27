@@ -109,8 +109,8 @@ export function createMarket(marketID: string): Market | null {
 
   market.accrualBlockTimestamp = 0
   market.blockTimestamp = 0
-  market.mintPaused = false;
-  market.borrowPaused = false;
+  market.mintPaused = false
+  market.borrowPaused = false
 
   // find price feed of the market
   let comptroller = Comptroller.load('1')!
@@ -179,7 +179,7 @@ export function updateMarket(
       .truncate(market.underlyingDecimals)
     market.borrowIndex = event.params.borrowIndex
 
-    let nativeMarket = Market.load(mNativeAddr)
+    let nativeMarket = Market.load(Address.fromString(mNativeAddr).toHexString())
     if (nativeMarket) {
       let nativeTokenPriceUSD = nativeMarket.underlyingPriceUSD
       if (nativeTokenPriceUSD.gt(zeroBD)) {
