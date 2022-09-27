@@ -109,6 +109,8 @@ export function createMarket(marketID: string): Market | null {
 
   market.accrualBlockTimestamp = 0
   market.blockTimestamp = 0
+  market.mintPaused = false;
+  market.borrowPaused = false;
 
   // find price feed of the market
   let comptroller = Comptroller.load('1')!
