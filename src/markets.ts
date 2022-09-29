@@ -121,6 +121,8 @@ export function createMarket(marketID: string): Market | null {
   let symbol =
     market.underlyingSymbol == nativeToken ? market.symbol : market.underlyingSymbol
   let feedProxyAddress = oracle.getFeed(symbol)
+  market._feedProxy = feedProxyAddress.toHexString()
+
   let feedProxy = FeedProxy.bind(feedProxyAddress)
   if (dataSource.network() == 'mbase') {
     // FeedProxy on moonbase doesn't have aggregator, skip it

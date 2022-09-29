@@ -124,6 +124,8 @@ type Market @entity {
   mintPaused: Boolean!
   borrowPaused: Boolean!
 
+  " Price feed proxy address "
+  _feedProxy: String!
   " Price feed address "
   _feed: String!
 }

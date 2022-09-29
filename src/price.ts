@@ -5,6 +5,37 @@ import { Address, BigDecimal, log } from '@graphprotocol/graph-ts'
 import { PriceOracle } from '../generated/templates/CToken/PriceOracle'
 import { addrEq, exponentToBigDecimal, zeroBD } from './helpers'
 import { mNativeAddr } from './constants'
+import { ConfirmAggregatorCall } from '../generated/Comptroller/FeedProxy'
+
+// Update aggregator for relevant market
+export function handleConfirmAggregator(call: ConfirmAggregatorCall): void {
+  let newAggregator = call.inputs._aggregator
+
+  // answer: which market is relevant
+  let feedProxy = call.to.toHexString()
+  let comptroller = Comptroller.load('1')!
+  let market: Market | null = null
+  for (let i = 0; i < comptroller._markets.length; i++) {
+    let marketID = comptroller._markets[i]
+    let _market = Market.load(marketID)
+    if (!_market) {
+      log.warning('[handleConfirmAggregator] market {} not found', [marketID])
+      continue
+    }
+    if (_market._feedProxy == feedProxy) {
+      market = _market
+      break
+    }
+  }
+
+  if (!market) {
+    log.warning('[handleConfirmAggregator] relevant market not found for feed proxy {}', [feedProxy])
+    return
+  }
+
+  market._feed = newAggregator.toHexString()
+  market.save()
+}
 
 // Update market price when feed contract emits AnswerUpdated
 // Compared to updating market price only when users interact with a market
