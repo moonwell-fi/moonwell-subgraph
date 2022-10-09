@@ -13,7 +13,7 @@ clean:
 
 generate-config:
 	YARN_SILENT=1 yarn mustache config/$(network).subgraph.json subgraph.mustache > subgraph.yaml && \
-	YARN_SILENT=1 yarn mustache config/$(network).constants.json src/constants.mustache > src/constants.ts
+	jq -r 'to_entries[] | "export let " + .key + " = " + (.value | tojson)' config/$(network).constants.json > src/constants.ts
 
 codegen:
 	yarn graph codegen
