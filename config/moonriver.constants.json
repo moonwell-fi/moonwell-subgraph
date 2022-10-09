@@ -5,5 +5,5 @@
   "protocolNativePairAddr": "0xE6Bfc609A2e58530310D6964ccdd236fc93b4ADB",
   "protocolNativePairStartBlock": 1512356,
   "protocolNativePairProtocolIndex": 1,
-  "governorAddr": "TODO"
+  "governorAddr": "0x0000000000000000000000000000000000000000"
 }
