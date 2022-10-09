@@ -20,7 +20,7 @@ import {
   Vote,
   Voter,
 } from '../generated/schema'
-import { governorAddr } from './constants'
+import config from '../config/config'
 import { BIGINT_ZERO, getOrElse, GovernanceVoteValue, ProposalState } from './helpers'
 
 export function handleProposalCreated(event: ProposalCreated): void {
@@ -178,7 +178,7 @@ export function handleVotingPeriodChanged(event: VotingPeriodChanged): void {
 function getOrCreateGovernor(): Governor {
   let governor = Governor.load('1')
   if (!governor) {
-    let contract = GovernorContract.bind(Address.fromString(governorAddr))
+    let contract = GovernorContract.bind(Address.fromString(config.governorAddr))
     governor = new Governor('1')
     governor.proposalCount = 0
     governor.quorumVotes = getOrElse<BigInt>(contract.try_quorumVotes(), BIGINT_ZERO)

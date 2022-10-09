@@ -23,14 +23,7 @@ import {
   getOrCreateMarketDailySnapshot,
   secondsPerDay,
 } from './helpers'
-import {
-  comptrollerAddr,
-  nativeToken,
-  mNativeAddr,
-  protocolNativePairAddr,
-  protocolNativePairStartBlock,
-  protocolNativePairProtocolIndex,
-} from './constants'
+import config from '../config/config'
 
 export function createMarket(marketID: string): Market | null {
   let market = new Market(marketID)
@@ -38,12 +31,12 @@ export function createMarket(marketID: string): Market | null {
   let cTokenContract = CToken.bind(marketAddress)
 
   // MGlimmer doesn't have method `underlying` (unlike MErc20) therefore we handle it differently
-  if (addrEq(marketID, mNativeAddr)) {
+  if (addrEq(marketID, config.mNativeAddr)) {
     market.underlyingAddress = '0x0000000000000000000000000000000000000000'
     market.underlyingDecimals = 18
     market.underlyingPrice = BigDecimal.fromString('1')
-    market.underlyingName = nativeToken
-    market.underlyingSymbol = nativeToken
+    market.underlyingName = config.nativeToken
+    market.underlyingSymbol = config.nativeToken
     market.underlyingPriceUSD = zeroBD
   } else {
     let underlyingAddrResult = cTokenContract.try_underlying()
@@ -119,7 +112,9 @@ export function createMarket(marketID: string): Market | null {
   // for some reason, feed symbols are set differently for native token vs the rest
   // for example, setFeed(mMOVR, feed) for MOVR market, but setFeed(USDC, feed) for USDC market
   let symbol =
-    market.underlyingSymbol == nativeToken ? market.symbol : market.underlyingSymbol
+    market.underlyingSymbol == config.nativeToken
+      ? market.symbol
+      : market.underlyingSymbol
   let feedProxyAddress = oracle.getFeed(symbol)
   let feedProxy = FeedProxy.bind(feedProxyAddress)
   if (dataSource.network() == 'mbase') {
@@ -149,7 +144,7 @@ export function updateMarket(
   if (market.accrualBlockTimestamp != blockTimestamp) {
     let contract = CToken.bind(marketAddress)
     let comptrollerContract = ComptrollerContract.bind(
-      Address.fromString(comptrollerAddr),
+      Address.fromString(config.comptrollerAddr),
     )
 
     market.accrualBlockTimestamp = contract.accrualBlockTimestamp().toI32()
@@ -179,7 +174,7 @@ export function updateMarket(
       .truncate(market.underlyingDecimals)
     market.borrowIndex = event.params.borrowIndex
 
-    let nativeMarket = Market.load(Address.fromString(mNativeAddr).toHexString())
+    let nativeMarket = Market.load(Address.fromString(config.mNativeAddr).toHexString())
     if (nativeMarket) {
       let nativeTokenPriceUSD = nativeMarket.underlyingPriceUSD
       if (nativeTokenPriceUSD.gt(zeroBD)) {
@@ -196,10 +191,10 @@ export function updateMarket(
           market.underlyingPriceUSD,
           market.supplyRewardSpeedNative,
         )
-        if (blockNumber >= protocolNativePairStartBlock) {
+        if (blockNumber >= config.protocolNativePairStartBlock) {
           // get protocol token price
           let protocolTokenPriceUSD = getOneProtocolTokenInNativeToken(
-            protocolNativePairProtocolIndex,
+            config.protocolNativePairProtocolIndex,
           ).times(nativeTokenPriceUSD)
           if (protocolTokenPriceUSD.gt(zeroBD)) {
             market.borrowRewardProtocol = getRewardEmission(
@@ -313,7 +308,9 @@ export function snapshotMarket(marketAddress: Address, blockTimestamp: i32): voi
 }
 
 function getOneProtocolTokenInNativeToken(protocolIndex: i32): BigDecimal {
-  let lpTokenContract = SolarbeamLPToken.bind(Address.fromString(protocolNativePairAddr))
+  let lpTokenContract = SolarbeamLPToken.bind(
+    Address.fromString(config.protocolNativePairAddr),
+  )
   let getReservesResult = lpTokenContract.try_getReserves()
   if (getReservesResult.reverted) {
     log.warning('[getOneProtocolTokenInNativeToken] reverted', [])
