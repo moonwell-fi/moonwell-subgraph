@@ -15,7 +15,7 @@ import {
   MarketDailySnapshot,
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
-import { comptrollerAddr } from './constants'
+import config from '../config/config'
 
 export const BIGINT_ZERO = BigInt.fromI32(0)
 
@@ -75,7 +75,7 @@ export function getOrCreateComptroller(): Comptroller {
   if (!comptroller) {
     comptroller = new Comptroller('1')
     comptroller._markets = []
-    let contract = ComptrollerContract.bind(Address.fromString(comptrollerAddr))
+    let contract = ComptrollerContract.bind(Address.fromString(config.comptrollerAddr))
 
     let oracleResult = contract.try_oracle()
     if (oracleResult.reverted) {

@@ -1,10 +1,39 @@
 import { Comptroller } from '../generated/schema'
 import { AnswerUpdated } from '../generated/templates/Feed/Feed'
 import { Market } from '../generated/schema'
-import { Address, BigDecimal, log } from '@graphprotocol/graph-ts'
+import { Address, BigDecimal, ethereum, log } from '@graphprotocol/graph-ts'
 import { PriceOracle } from '../generated/templates/CToken/PriceOracle'
 import { addrEq, exponentToBigDecimal, zeroBD } from './helpers'
-import { mNativeAddr } from './constants'
+import config from '../config/config'
+import { Feed } from '../generated/templates'
+
+// Special handler that hardcodes _feed for certain market at a certain block.
+// This is necessary because Chainlink could change mtoken feed address through private transaction
+// and without emitting any events.
+//
+// An example: MOVR feed address was changed from 0xc9228b26d5b40e7d547aac86f05da912e42205c7
+// to 0x090ef17e7fff9abb3bff40f9b75bd5e08d4fb87c privately at block 2536028.
+// As a work around we change _feed from 0xc9228b26d5b40e7d547aac86f05da912e42205c7
+// to 0x090ef17e7fff9abb3bff40f9b75bd5e08d4fb87c at block 2536028.
+export function handleBlock(block: ethereum.Block): void {
+  for (let i = 0; i < config.oracleOverrides.length; i++) {
+    let oracleOverride = config.oracleOverrides[i]
+
+    if (block.number.toI32() == oracleOverride.blockNumber) {
+      let market = Market.load(Address.fromString(oracleOverride.mtoken).toHexString())
+      if (!market) {
+        log.warning('[handleBlock] market {} not found', [oracleOverride.mtoken])
+        continue
+      }
+
+      let newFeed = Address.fromString(oracleOverride.newFeed)
+      market._feed = newFeed.toHexString()
+      market.save()
+
+      Feed.create(newFeed)
+    }
+  }
+}
 
 // Update market price when feed contract emits AnswerUpdated
 // Compared to updating market price only when users interact with a market
@@ -36,8 +65,8 @@ export function handleAnswerUpdated(event: AnswerUpdated): void {
     market.underlyingDecimals,
   )
   market.underlyingPriceUSD = underlyingTokenPriceUSD
-  if (!addrEq(market.id, mNativeAddr)) {
-    let nativeTokenPriceUSD = getTokenPrice(Address.fromString(mNativeAddr), 18)
+  if (!addrEq(market.id, config.mNativeAddr)) {
+    let nativeTokenPriceUSD = getTokenPrice(Address.fromString(config.mNativeAddr), 18)
     if (nativeTokenPriceUSD.ge(zeroBD)) {
       market.underlyingPrice = underlyingTokenPriceUSD.div(nativeTokenPriceUSD)
     }

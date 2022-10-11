@@ -1,9 +1,0 @@
-{
-  "comptrollerAddr": "0x4524e0Dfa042188B1F9f804642456277dbDBE253",
-  "nativeToken": "DEV",
-  "mNativeAddr": "0x827Bb1E617B862d4BC81a6a7995a34dF6EE78a63",
-  "protocolNativePairAddr": "0x54c7E9cE658A28E1AD3d1B8A91eb8AB8F5316Bc6",
-  "protocolNativePairStartBlock": 1721365,
-  "protocolNativePairProtocolIndex": 0,
-  "governorAddr": "0x1eA239b116b911374BA144EFb5cA077d3A224fE9"
-}
