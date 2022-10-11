@@ -24,7 +24,7 @@ import {
   Account2,
 } from '../generated/schema'
 import { GovToken } from '../generated/templates/CToken/GovToken'
-import { comptrollerAddr, govTokenAddr, safetyModuleAddr } from '../src/constants'
+import config from '../config/config'
 
 import { snapshotMarket, updateMarket } from './markets'
 import {
@@ -527,12 +527,12 @@ function updateMarketAccount2(marketID: string, accountID: string): void {
   }
 
   let accountAddress = Address.fromString(accountID)
-  let contract = Comptroller.bind(Address.fromString(comptrollerAddr))
+  let contract = Comptroller.bind(Address.fromString(config.comptrollerAddr))
   let getAccountLiquidityResult = contract.try_getAccountLiquidity(accountAddress)
   if (getAccountLiquidityResult.reverted) {
     log.warning('[updateMarketAccount2] try_getAccountLiquidity({}) on {} reverted', [
       accountID,
-      comptrollerAddr,
+      config.comptrollerAddr,
     ])
   } else {
     account2.accountLiquidity = getAccountLiquidityResult.value.getValue1()
@@ -547,7 +547,7 @@ function updateMarketAccount2(marketID: string, accountID: string): void {
     log.warning('[updateMarketAccount2] try_rewardAccrued({}, {}) on {} reverted', [
       ProtocolTokenRewardType.toString(),
       accountID,
-      comptrollerAddr,
+      config.comptrollerAddr,
     ])
   } else {
     account2.rewardAccruedProtocol = rewardAccruedProtocolResult.value
@@ -560,18 +560,18 @@ function updateMarketAccount2(marketID: string, accountID: string): void {
     log.warning('[updateMarketAccount2] try_rewardAccrued({}, {}) on {} reverted', [
       NativeTokenRewardType.toString(),
       accountID,
-      comptrollerAddr,
+      config.comptrollerAddr,
     ])
   } else {
     account2.rewardAccruedNative = nativeRewardAccruedResult.value
   }
-  let govTokenContract = GovToken.bind(Address.fromString(govTokenAddr))
+  let govTokenContract = GovToken.bind(Address.fromString(config.govTokenAddr))
 
   let govTokenBalanceResult = govTokenContract.try_balanceOf(accountAddress)
   if (govTokenBalanceResult.reverted) {
     log.warning('[updateMarketAccount2] try_balanceOf({}) on {} reverted', [
       accountID,
-      govTokenAddr,
+      config.govTokenAddr,
     ])
   } else {
     account2.govTokenBalance = govTokenBalanceResult.value
@@ -579,13 +579,13 @@ function updateMarketAccount2(marketID: string, accountID: string): void {
 
   let govTokenAllowanceResult = govTokenContract.try_allowance(
     accountAddress,
-    Address.fromString(safetyModuleAddr),
+    Address.fromString(config.safetyModuleAddr),
   )
   if (govTokenAllowanceResult.reverted) {
     log.warning('[updateMarketAccount2] try_allowance({}, {}) on {} reverted', [
       accountID,
-      safetyModuleAddr,
-      govTokenAddr,
+      config.safetyModuleAddr,
+      config.govTokenAddr,
     ])
   } else {
     account2.govTokenAllowance = govTokenAllowanceResult.value
@@ -633,12 +633,12 @@ function updateMarketAccount2(marketID: string, accountID: string): void {
   }
   let tokenAllowanceResult = tokenContract.try_allowance(
     accountAddress,
-    Address.fromString(safetyModuleAddr),
+    Address.fromString(config.safetyModuleAddr),
   )
   if (tokenAllowanceResult.reverted) {
     log.warning('[updateMarketAccount2] try_allowance({}, {}) on {} reverted', [
       accountID,
-      safetyModuleAddr,
+      config.safetyModuleAddr,
       market.underlyingAddress,
     ])
   } else {

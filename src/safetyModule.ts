@@ -10,9 +10,9 @@ import {
   Redeem,
   Cooldown,
 } from '../generated/SafetyModule/SafetyModule'
-import { safetyModuleAddr } from './constants'
 import { Address, log } from '@graphprotocol/graph-ts'
 import { zeroBI } from './helpers'
+import config from "../config/config";
 
 export function handleAssetConfigUpdated(event: AssetConfigUpdated): void {
   let safetyModule = getOrCreateSafetyModule()
@@ -48,12 +48,12 @@ export function handlerRewardsAccrued(event: RewardsAccrued): void {
   account2.stakerRewardsToClaim = account2.stakerRewardsToClaim.plus(event.params.amount)
   account2.save()
 
-  let contract = SafetyModuleContract.bind(Address.fromString(safetyModuleAddr))
+  let contract = SafetyModuleContract.bind(Address.fromString(config.safetyModuleAddr))
   let balanceResult = contract.try_balanceOf(Address.fromString(accountID))
   if (balanceResult.reverted) {
     log.warning('[handlerRewardsAccrued] try_balanceOf({}) on {} reverted', [
       accountID,
-      safetyModuleAddr,
+      config.safetyModuleAddr,
     ])
     return
   }
@@ -64,7 +64,7 @@ export function handlerRewardsAccrued(event: RewardsAccrued): void {
   let totalSupplyResult = contract.try_totalSupply()
   if (totalSupplyResult.reverted) {
     log.warning('[handlerRewardsAccrued] try_totalSupply on {} reverted', [
-      safetyModuleAddr,
+      config.safetyModuleAddr,
     ])
     return
   }
@@ -99,12 +99,12 @@ function getOrCreateSafetyModule(): SafetyModule {
   let safetyModule = SafetyModule.load('1')
   if (!safetyModule) {
     safetyModule = new SafetyModule('1')
-    let contract = SafetyModuleContract.bind(Address.fromString(safetyModuleAddr))
+    let contract = SafetyModuleContract.bind(Address.fromString(config.safetyModuleAddr))
 
     let cooldownSecondsResult = contract.try_COOLDOWN_SECONDS()
     if (cooldownSecondsResult.reverted) {
       log.warning('[getOrCreateSafetyModule] try_COOLDOWN_SECONDS() on {} reverted', [
-        safetyModuleAddr,
+        config.safetyModuleAddr,
       ])
     } else {
       safetyModule.cooldownSeconds = cooldownSecondsResult.value
@@ -113,7 +113,7 @@ function getOrCreateSafetyModule(): SafetyModule {
     let unstakeWindowResult = contract.try_UNSTAKE_WINDOW()
     if (unstakeWindowResult.reverted) {
       log.warning('[getOrCreateSafetyModule] try_UNSTAKE_WINDOW() on {} reverted', [
-        safetyModuleAddr,
+        config.safetyModuleAddr,
       ])
     } else {
       safetyModule.unstakeWindow = unstakeWindowResult.value
@@ -122,7 +122,7 @@ function getOrCreateSafetyModule(): SafetyModule {
     let distributionEndResult = contract.try_DISTRIBUTION_END()
     if (distributionEndResult.reverted) {
       log.warning('[getOrCreateSafetyModule] try_DISTRIBUTION_END() on {} reverted', [
-        safetyModuleAddr,
+        config.safetyModuleAddr,
       ])
     } else {
       safetyModule.distributionEnd = distributionEndResult.value
@@ -144,12 +144,12 @@ function updateStakerCooldown(accountID: string): void {
     return
   }
 
-  let contract = SafetyModuleContract.bind(Address.fromString(safetyModuleAddr))
+  let contract = SafetyModuleContract.bind(Address.fromString(config.safetyModuleAddr))
   let stakersCooldownResult = contract.try_stakersCooldowns(Address.fromString(accountID))
   if (stakersCooldownResult.reverted) {
     log.warning('[updateStakerCooldown] try_stakersCooldowns({}) on {} reverted', [
       accountID,
-      safetyModuleAddr,
+      config.safetyModuleAddr,
     ])
     return
   }

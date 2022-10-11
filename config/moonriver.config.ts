@@ -8,6 +8,8 @@ const config = new Config(
   1512356,
   1,
   '0x0000000000000000000000000000000000000000',
+  '0xBb8d88bcD9749636BC4D2bE22aaC4Bb3B01A58F1',
+  '0xCd76e63f3AbFA864c53b4B98F57c1aA6539FDa3a',
   [
     new OracleOverride(
       2536028,

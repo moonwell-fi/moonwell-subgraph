@@ -8,3 +8,5 @@ build/
 # generated from mustache
 subgraph.yaml
 config/config.ts
+
+.env
