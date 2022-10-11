@@ -1,4 +1,4 @@
-import { log } from '@graphprotocol/graph-ts'
+import { Address, log, dataSource } from '@graphprotocol/graph-ts'
 import {
   MarketEntered,
   MarketExited,
@@ -10,12 +10,14 @@ import {
   SupplyRewardSpeedUpdated,
   BorrowRewardSpeedUpdated,
   NewBorrowCap,
+  ActionPaused1 as MTokenActionPaused,
   DistributedSupplierReward,
   DistributedBorrowerReward,
 } from '../generated/Comptroller/Comptroller'
 
 import { CToken } from '../generated/templates'
-import { Market, Account, MarketAccount2, Account2 } from '../generated/schema'
+import { Market, Account, Comptroller, MarketAccount2, Account2 } from '../generated/schema'
+
 import {
   mantissaFactorBD,
   updateCommonCTokenStats,
@@ -27,6 +29,7 @@ import {
   createMarketAccount2,
 } from './helpers'
 import { createMarket } from './markets'
+import { Feed } from '../generated/templates'
 
 export function handleMarketListed(event: MarketListed): void {
   // Dynamically index all new listed tokens
@@ -40,6 +43,17 @@ export function handleMarketListed(event: MarketListed): void {
   }
 
   market.save()
+
+  let comptroller = Comptroller.load('1')!
+  let markets = comptroller._markets
+  markets.push(marketID)
+  comptroller._markets = markets
+  comptroller.save()
+
+  if (dataSource.network() != 'mbase') {
+    // ignore feed on moonbase
+    Feed.create(Address.fromString(market._feed))
+  }
 }
 
 export function handleMarketEntered(event: MarketEntered): void {
@@ -229,4 +243,19 @@ export function handleDistributedBorrowerReward(event: DistributedBorrowerReward
     marketAccount2.rewardBorrowerIndexNative = event.params.wellBorrowIndex
   }
   marketAccount2.save()
+}
+export function handleMTokenActionPaused(event: MTokenActionPaused): void {
+  let marketID = event.params.mToken.toHexString()
+  let market = Market.load(marketID)
+  if (!market) {
+    log.warning('[handleMTokenActionPaused] market {} not found', [marketID])
+    return
+  }
+
+  if (event.params.action == 'Mint') {
+    market.mintPaused = event.params.pauseState
+  } else if (event.params.action == 'Borrow') {
+    market.borrowPaused = event.params.pauseState
+  }
+  market.save()
 }

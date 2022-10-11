@@ -7,4 +7,4 @@ generated/
 build/
 # generated from mustache
 subgraph.yaml
-src/constants.ts
+config/config.ts
