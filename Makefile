@@ -9,7 +9,7 @@ bash:
 		bash
 
 clean:
-	rm -rf subgraph.yaml src/constants.ts generated/ build/
+	rm -rf subgraph.yaml src/constants.ts generated/ build/ config/config.ts
 
 generate-config:
 	YARN_SILENT=1 yarn mustache config/$(network).subgraph.json subgraph.mustache > subgraph.yaml && \
