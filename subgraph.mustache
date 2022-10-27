@@ -74,6 +74,8 @@ dataSources:
           handler: handleProposalCanceled
         - event: ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)
           handler: handleProposalCreated
+        - event: ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string,uint256)
+          handler: handleProposalCreated
         - event: ProposalExecuted(uint256)
           handler: handleProposalExecuted
         - event: ProposalQueued(uint256,uint256)
