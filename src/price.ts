@@ -41,37 +41,40 @@ export function handleBlock(block: ethereum.Block): void {
 export function handleAnswerUpdated(event: AnswerUpdated): void {
   let feed = event.address.toHexString()
   let comptroller = Comptroller.load('1')!
-  let market: Market | null = null
+  let markets: Market[] = []
   for (let i = 0; i < comptroller._markets.length; i++) {
     let marketID = comptroller._markets[i]
-    let _market = Market.load(marketID)
-    if (!_market) {
+    let market = Market.load(marketID)
+    if (!market) {
       log.warning('[handleAnswerUpdated] market {} not found', [marketID])
       continue
     }
-    if (_market._feed == feed) {
-      market = _market
-      break
+    if (market._feed == feed) {
+      markets.push(market)
     }
   }
-  if (!market) {
+
+  if (markets.length === 0) {
     log.warning('[handleAnswerUpdated] relevant market not found for feed {}', [feed])
     return
   }
 
-  // update price of the market
-  let underlyingTokenPriceUSD = getTokenPrice(
-    Address.fromString(market.id),
-    market.underlyingDecimals,
-  )
-  market.underlyingPriceUSD = underlyingTokenPriceUSD
-  if (!addrEq(market.id, config.mNativeAddr)) {
-    let nativeTokenPriceUSD = getTokenPrice(Address.fromString(config.mNativeAddr), 18)
-    if (nativeTokenPriceUSD.ge(zeroBD)) {
-      market.underlyingPrice = underlyingTokenPriceUSD.div(nativeTokenPriceUSD)
+  for (let i = 0; i < markets.length; i++) {
+    let market = markets[i]
+    // update price of the market
+    let underlyingTokenPriceUSD = getTokenPrice(
+      Address.fromString(market.id),
+      market.underlyingDecimals,
+    )
+    market.underlyingPriceUSD = underlyingTokenPriceUSD
+    if (!addrEq(market.id, config.mNativeAddr)) {
+      let nativeTokenPriceUSD = getTokenPrice(Address.fromString(config.mNativeAddr), 18)
+      if (nativeTokenPriceUSD.ge(zeroBD)) {
+        market.underlyingPrice = underlyingTokenPriceUSD.div(nativeTokenPriceUSD)
+      }
     }
+    market.save()
   }
-  market.save()
 }
 
 function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
