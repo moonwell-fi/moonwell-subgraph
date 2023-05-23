@@ -22,7 +22,6 @@ import {
   handleNewBorrows,
   createNewRepayBorrowEvent,
   handleNewRepayBorrows,
-  ZERO_ADDRESS,
 } from "./utils";
 
 import {
@@ -30,6 +29,7 @@ import {
   cTokenDecimalsBD,
   cTokenDecimals,
   zeroBI,
+  zeroAddress,
 } from "../../src/helpers"
 
 let comptrollerAddress = Address.fromString("0x0b7a0EAA884849c6Af7a129e899536dDDcA4905E")
@@ -351,7 +351,7 @@ describe("Create Comptroller, MOVR + xcKSM markets, and accounts with mock event
 
   test ("The MOVR Market should have the correct values", () => {
     let expectedMarketName = "Moonwell MOVR"
-    let expectedMarketUnderlying = ZERO_ADDRESS
+    let expectedMarketUnderlying = zeroAddress
     assert.fieldEquals("Market", movrMarketAddress, "underlyingAddress", expectedMarketUnderlying)
     assert.fieldEquals("Market", movrMarketAddress, "name", expectedMarketName)
     assert.fieldEquals("Market", movrMarketAddress, "symbol", movrMarketSymbol)

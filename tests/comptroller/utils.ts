@@ -26,11 +26,6 @@ import {
   handleRepayBorrow,
 } from "../../src/ctoken"
 
-import { zeroBD, oneBD, zeroBI, zeroAddress  } from "../../src/helpers"
-
-export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
-export const ZERO_ADDRESS = ADDRESS_ZERO
-
 export function saveComptroller(): void {
   let comptroller = Comptroller.load('1')
   if (!comptroller) {
@@ -41,58 +36,6 @@ export function saveComptroller(): void {
     comptroller._markets = []
   }
   comptroller.save()
-}
-
-export function saveMarket(address: string, name: string, symbol: string, underlyingAddress: string, interestRateModelAddress: string, feedAddress: string): void {
-  let market = Market.load(address)
-  if (!market) {
-    market = new Market(address)
-    market.id = address.toString()
-    market.name = name
-    market.symbol = symbol
-    market.underlyingAddress = underlyingAddress
-    market.underlyingName = name
-    market.underlyingPrice = oneBD
-    market.underlyingPriceUSD = oneBD
-    market.underlyingSymbol = symbol
-    market.underlyingDecimals = 18
-    market.totalBorrows = zeroBD
-    market.totalSupply = zeroBD
-    market.reserves = zeroBD
-    market.cash = zeroBD
-    market.supplyRate = zeroBD
-    market.borrowRate = zeroBD
-    market.collateralFactor = zeroBD
-    market.exchangeRate = zeroBD
-    market.borrowIndex = zeroBI
-    market.borrowRewardSpeedNative = zeroBI
-    market.supplyRewardSpeedNative = zeroBI
-    market.borrowRewardSpeedProtocol = zeroBI
-    market.supplyRewardSpeedProtocol = zeroBI
-    market.borrowRewardNative = zeroBD
-    market.borrowRewardProtocol = zeroBD
-    market.supplyRewardNative = zeroBD
-    market.supplyRewardProtocol = zeroBD
-    market.borrowRewardStateNativeIndex = zeroBI
-    market.borrowRewardStateNativeTimestamp = 0
-    market.borrowRewardStateProtocolTimestamp = 0
-    market.supplyRewardStateNativeTimestamp = 0
-    market.supplyRewardStateProtocolTimestamp = 0
-    market.supplyRewardStateNativeIndex = zeroBI
-    market.borrowRewardStateProtocolIndex = zeroBI
-    market.supplyRewardStateProtocolIndex = zeroBI
-    market.borrowCap = zeroBI
-    market.reserveFactor = zeroBI
-    market.accrualBlockTimestamp = 0
-    market.blockTimestamp = 0
-    market.interestRateModelAddress = interestRateModelAddress
-    market.borrowerCount = 0
-    market.supplierCount = 0
-    market.mintPaused = false
-    market.borrowPaused = false
-    market._feed = feedAddress
-  }
-  market.save()
 }
 
 export function saveAccount(address: string): void {
