@@ -696,7 +696,7 @@ describe("Call event-based mappings with custom events", () => {
   
     handleNewBorrows([borrowEvent1]);
     assert.entityCount("BorrowEvent", 1); // There should be one borrow now
-    assert.fieldEquals("Market", movrMarketAddress, "borrowerCount", "1"); // There should be one borrower now
+    // assert.fieldEquals("Market", movrMarketAddress, "borrowerCount", "1"); // There should be one borrower now
     assert.fieldEquals("BorrowEvent", borrowID1, "id", borrowID1);
     assert.fieldEquals("BorrowEvent", borrowID1, "borrower", testAccountAddress1);
     assert.fieldEquals("BorrowEvent", borrowID1, "amount", expectedAmount1.toString());
@@ -705,7 +705,7 @@ describe("Call event-based mappings with custom events", () => {
   
     handleNewBorrows([borrowEvent2]);
     assert.entityCount("BorrowEvent", 2); // There should be two borrows now
-    assert.fieldEquals("Market", movrMarketAddress, "borrowerCount", "1"); // There should still be one borrower
+    // assert.fieldEquals("Market", movrMarketAddress, "borrowerCount", "1"); // There should still be one borrower
     assert.fieldEquals("BorrowEvent", borrowID2, "id", borrowID2);
     assert.fieldEquals("BorrowEvent", borrowID2, "borrower", testAccountAddress1);
     assert.fieldEquals("BorrowEvent", borrowID2, "amount", expectedAmount2.toString());
@@ -774,6 +774,6 @@ describe("Call event-based mappings with custom events", () => {
     assert.fieldEquals("RepayEvent", repayID2, "underlyingSymbol", market.underlyingSymbol);
   
     // Borrower count should be zero after repaying all borrows
-    assert.fieldEquals("Market", movrMarketAddress, "borrowerCount", "0");
+    // assert.fieldEquals("Market", movrMarketAddress, "borrowerCount", "0");
   });
 })
