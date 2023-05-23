@@ -29,7 +29,7 @@ import {
   exponentToBigDecimal,
   cTokenDecimalsBD,
   cTokenDecimals,
-  BIGINT_ZERO,
+  zeroBI,
   zeroBD,
 } from './helpers'
 
@@ -411,7 +411,7 @@ export function handleTransfer(event: Transfer): void {
   } else {
     // We should only decrement supplierCount when the from balance is now zero -AND- the from is not the market contract
     // We should not decrement supplier count when the from is the market contract (i.e. minting)
-    if ((balanceOfFromAccountResult.value.equals(BIGINT_ZERO) && !event.params.from.equals(cTokenContract._address))) {
+    if ((balanceOfFromAccountResult.value.equals(zeroBI) && !event.params.from.equals(cTokenContract._address))) {
       log.warning('[handleTransfer] -1 balanceOfFromAccountResult.equals(event.params.amount) from: {}, to: {}, marketID: {}, amount: {}', [
         event.params.from.toHexString(),
         event.params.to.toHexString(),
