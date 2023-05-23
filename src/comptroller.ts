@@ -59,6 +59,7 @@ export function handleMarketEntered(event: MarketEntered): void {
     return
   }
 
+  market.borrowerCount = market.borrowerCount + 1
   market.save()
 
   let accountID = event.params.account.toHex()
@@ -88,6 +89,7 @@ export function handleMarketExited(event: MarketExited): void {
     return
   }
 
+  market.borrowerCount = market.borrowerCount - 1
   market.save()
 
   let accountID = event.params.account.toHex()

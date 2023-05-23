@@ -159,17 +159,6 @@ export function handleBorrow(event: Borrow): void {
     cTokenStats.totalUnderlyingBorrowed.plus(borrowAmountBD)
   cTokenStats.save()
 
-  if (cTokenStats.totalUnderlyingBorrowed.equals(borrowAmountBD)) {
-    // If this is the first borrow, increment the market's borrower count
-    log.warning('[handleBorrow] +1 cTokenStats.totalUnderlyingBorrowed.equals(borrowAmountBD) marketID: {}, borrower: {}, amount: {}', [
-      marketID,
-      event.params.borrower.toHexString(),
-      event.params.borrowAmount.toString()
-    ])
-    market.borrowerCount = market.borrowerCount + 1
-    market.save()
-  }
-
   let borrowID = event.transaction.hash
     .toHexString()
     .concat('-')
@@ -215,24 +204,6 @@ export function handleRepayBorrow(event: RepayBorrow): void {
   let account = Account.load(accountID)
   if (account == null) {
     createAccount(accountID)
-  }
-
-  if (
-    event.params.accountBorrows
-      .toBigDecimal()
-      .div(exponentToBigDecimal(market.underlyingDecimals))
-      .truncate(market.underlyingDecimals)
-      .equals(zeroBD)
-  ) {
-    // If this is the last borrow, decrement the market's borrower count
-    log.warning('[handleRepayBorrow] -1 event.params.accountBorrows.equals(0) marketID: {}, borrower: {}, amount repaid: {}, accountBorrows: {}', [
-      market.id,
-      event.params.borrower.toHexString(),
-      event.params.repayAmount.toString(),
-      event.params.accountBorrows.toString()
-    ])
-    market.borrowerCount = market.borrowerCount - 1
-    market.save()
   }
 
   // Update cTokenStats common for all events, and return the stats to update unique
