@@ -21,3 +21,10 @@ You can also see the saved queries on the hosted service for examples.
 ## Development
 
 The subgraph is under major refactor in `dev` branch.
+
+## Local Dev Environment Setup
+
+Set the following environment variables:
+- `GITHUB_DEV_PROFILE` = Your Github dev profile name where you have created hosted subgraphs for each network
+- `GRAPH_DEV_ACCESS_TOKEN` = Your deployment key for the development instances of hosted subgraphs
+- `SATSUMA_ACCESS_TOKEN` = Your deployment key for Satsuma's hosted service
