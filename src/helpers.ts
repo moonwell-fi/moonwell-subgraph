@@ -42,6 +42,8 @@ export let zeroBD = BigDecimal.zero()
 export let zeroBI = BigInt.zero()
 export let secondsPerDay = 24 * 60 * 60
 export let daysPerYear = 365
+export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
+export const zeroAddress = ADDRESS_ZERO
 
 export function intToBigDecimal(a: i32): BigDecimal {
   return new BigDecimal(BigInt.fromI32(a))

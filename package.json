@@ -9,7 +9,8 @@
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "0.30.1",
-    "prettier": "^2.6.2",
-    "mustache": "^4.2.0"
+    "matchstick-as": "^0.5.2",
+    "mustache": "^4.2.0",
+    "prettier": "^2.6.2"
   }
 }

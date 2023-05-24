@@ -8,3 +8,6 @@ build/
 # generated from mustache
 subgraph.yaml
 config/config.ts
+# testing specific
+tests/.latest.json
+tests/.bin/
