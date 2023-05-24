@@ -217,13 +217,7 @@ export function handleRepayBorrow(event: RepayBorrow): void {
     createAccount(accountID)
   }
 
-  if (
-    event.params.accountBorrows
-      .toBigDecimal()
-      .div(exponentToBigDecimal(market.underlyingDecimals))
-      .truncate(market.underlyingDecimals)
-      .equals(zeroBD)
-  ) {
+  if (event.params.accountBorrows.equals(zeroBI)) {
     // If this is the last borrow, decrement the market's borrower count
     log.warning('[handleRepayBorrow] -1 event.params.accountBorrows.equals(0) marketID: {}, borrower: {}, amount repaid: {}, accountBorrows: {}', [
       market.id,
