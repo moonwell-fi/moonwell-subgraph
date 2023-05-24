@@ -59,9 +59,6 @@ export function handleMarketEntered(event: MarketEntered): void {
     return
   }
 
-  market.borrowerCount = market.borrowerCount + 1
-  market.save()
-
   let accountID = event.params.account.toHex()
   let account = Account.load(accountID)
   if (account == null) {
@@ -88,9 +85,6 @@ export function handleMarketExited(event: MarketExited): void {
     log.warning('[handleMarketExited] market {} not found', [marketID])
     return
   }
-
-  market.borrowerCount = market.borrowerCount - 1
-  market.save()
 
   let accountID = event.params.account.toHex()
   let account = Account.load(accountID)
