@@ -1,5 +1,6 @@
 github_dev_profile ?= $(GITHUB_DEV_PROFILE)
 graph_dev_access_token ?= $(GRAPH_DEV_ACCESS_TOKEN)
+graph_access_token ?= $(GRAPH_ACCESS_TOKEN)
 satsuma_access_token ?= $(SATSUMA_ACCESS_TOKEN)
 
 major_version_label ?= 0.0.1
