@@ -46,10 +46,13 @@ deploy-satsuma:
 	--deploy-key $(satsuma_access_token)
 
 all:
-	$(MAKE) clean generate-config codegen deploy
+	$(MAKE) clean generate-config codegen deploy deploy-satsuma
 
 dev:
 	$(MAKE) clean generate-config codegen deploy-dev deploy-satsuma
+
+prod:
+	$(MAKE) clean generate-config codegen deploy deploy-satsuma
 
 local:
 	$(MAKE) clean generate-config codegen deploy-local
