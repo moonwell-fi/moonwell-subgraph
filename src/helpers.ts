@@ -118,8 +118,10 @@ export function getOrCreateMarketDailySnapshot(
   blockTimestamp: i32,
 ): MarketDailySnapshot {
   let snapshotID = marketID.concat('-').concat(getEpochDays(blockTimestamp).toString())
+  log.info('[getorCreateMarketDailySnapshot] snapshotID: {}', [snapshotID])
   let snapshot = MarketDailySnapshot.load(snapshotID)
   if (!snapshot) {
+    log.warning('[getorCreateMarketDailySnapshot] snapshot not found, creating new snapshot {}', [snapshotID])
     snapshot = new MarketDailySnapshot(snapshotID)
     snapshot.market = marketID
     snapshot.totalBorrows = zeroBD

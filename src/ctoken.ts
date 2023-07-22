@@ -507,7 +507,8 @@ export function handleAccrueInterest(event: AccrueInterest): void {
     event.block.number.toI32(),
     event,
   )
-  snapshotMarket(event.address, event.block.timestamp.toI32())
+  // Moved this into the price handler so snapshots can get taken more frequently
+  // snapshotMarket(event.address, event.block.timestamp.toI32())
 }
 
 export function handleNewReserveFactor(event: NewReserveFactor): void {
