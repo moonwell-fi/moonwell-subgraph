@@ -21,6 +21,9 @@ type Market @entity {
   "CToken address"
   id: ID!
 
+  "Array of AccountCTokens related to this market"
+  accountCTokens: [AccountCToken!]! @derivedFrom(field: "market")
+
   "Name of the cToken"
   name: String!
 
@@ -450,6 +453,18 @@ type RepayEvent implements UnderlyingTransfer @entity {
 type MarketDailySnapshot @entity {
   " {market smart contract address}-{epoch days} "
   id: ID!
+  market: Market!
+
+  totalBorrows: BigDecimal!
+  totalSupplies: BigDecimal!
+  totalBorrowsUSD: BigDecimal!
+  totalSuppliesUSD: BigDecimal!
+}
+
+type AccountCTokenDailySnapshot @entity {
+  " {accountID}-{marketID}-{epoch days} "
+  id: ID!
+  account: Account!
   market: Market!
 
   totalBorrows: BigDecimal!
