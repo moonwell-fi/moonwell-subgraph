@@ -136,10 +136,12 @@ export function getOrCreateMarketDailySnapshot(
     let market = Market.load(marketID)
 
     // Iterate over the accountCToken IDs and create a snapshot for each one
-    if (market && market.accountCTokens) {
-      for (let i = 0; i < market.accountCTokens.length; i++) {
-        let accountCTokenID = market.accountCTokens[i]
-        let accountCToken = AccountCToken.load(accountCTokenID)
+    if (market) {
+
+      let accounts = market.accountCTokens.load();
+
+      for (let i = 0; i < accounts.length; i++) {
+        let accountCToken = accounts[i]
 
         // Create new AccountCTokenDailySnapshot
         if (accountCToken) {

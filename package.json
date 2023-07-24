@@ -5,10 +5,10 @@
   "license": "MIT",
   "scripts": {},
   "dependencies": {
-    "@graphprotocol/graph-ts": "0.27.0"
+    "@graphprotocol/graph-ts": "^0.31.0"
   },
   "devDependencies": {
-    "@graphprotocol/graph-cli": "0.30.1",
+    "@graphprotocol/graph-cli": "^0.51.0",
     "matchstick-as": "^0.5.2",
     "mustache": "^4.2.0",
     "prettier": "^2.6.2"
