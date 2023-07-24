@@ -115,6 +115,12 @@ export function getOrCreateComptroller(): Comptroller {
   return comptroller
 }
 
+export function getOrCreateStakingDailySnapshot(
+  blockTimestamp: i32,
+): StakingDailySnapshot {
+  
+}
+
 export function getOrCreateMarketDailySnapshot(
   marketID: string,
   blockTimestamp: i32,
