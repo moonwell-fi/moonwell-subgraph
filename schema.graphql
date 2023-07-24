@@ -472,3 +472,11 @@ type AccountCTokenDailySnapshot @entity {
   totalBorrowsUSD: BigDecimal!
   totalSuppliesUSD: BigDecimal!
 }
+
+type StakingDailySnapshot @entity {
+  " {staking smart contract address}-{epoch days} "
+  id: ID!
+
+  totalStaked: BigDecimal!
+  totalStakedUSD: BigDecimal!
+}
