@@ -6,6 +6,7 @@ import { PriceOracle } from '../generated/templates/CToken/PriceOracle'
 import { addrEq, exponentToBigDecimal, zeroBD } from './helpers'
 import config from '../config/config'
 import { Feed } from '../generated/templates'
+import { snapshotMarket } from './markets'
 
 // Special handler that hardcodes _feed for certain market at a certain block.
 // This is necessary because Chainlink could change mtoken feed address through private transaction
@@ -74,6 +75,7 @@ export function handleAnswerUpdated(event: AnswerUpdated): void {
       }
     }
     market.save()
+    snapshotMarket(Address.fromString(market.id), event.block.timestamp.toI32())
   }
 }
 
