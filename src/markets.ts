@@ -313,6 +313,7 @@ export function snapshotStaking(blockNumber: i32, blockTimestamp: i32): void {
   // Don't try to attempt a snapshot before the contract is deployed
   if (blockNumber < config.safetyModuleStartBlock) return
   let snapshot = getOrCreateStakingDailySnapshot(blockTimestamp)
+  if (snapshot.totalStaked != zeroBD) return
   let safetyModuleContract = SafetyModule.bind(
     Address.fromString(config.safetyModuleAddr),
   )
