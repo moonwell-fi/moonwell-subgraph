@@ -6,7 +6,7 @@ import { FeedProxy } from '../generated/Comptroller/FeedProxy'
 import { ERC20 } from '../generated/templates/CToken/ERC20'
 import { AccrueInterest, CToken } from '../generated/templates/CToken/CToken'
 import { SolarbeamLPToken } from '../generated/templates/CToken/SolarbeamLPToken'
-import { SafetyModule } from '../generated/templates/CToken/SafetyModule'
+import { SafetyModule } from '../generated/templates/Feed/SafetyModule'
 
 import {
   exponentToBigDecimal,
