@@ -12,7 +12,9 @@ import {
   Account,
   AccountCTokenTransaction,
   Comptroller,
+  Market,
   MarketDailySnapshot,
+  AccountCTokenDailySnapshot,
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import config from '../config/config'
@@ -129,6 +131,47 @@ export function getOrCreateMarketDailySnapshot(
     snapshot.totalBorrowsUSD = zeroBD
     snapshot.totalSuppliesUSD = zeroBD
     snapshot.save()
+
+    // Load the market entity
+    let market = Market.load(marketID)
+
+    // Iterate over the accountCToken IDs and create a snapshot for each one
+    if (market) {
+
+      let accounts = market.accountCTokens.load();
+
+      for (let i = 0; i < accounts.length; i++) {
+        let accountCToken = accounts[i]
+
+        // Create new AccountCTokenDailySnapshot
+        if (accountCToken) {
+          let id = accountCToken.account
+            .concat('-')
+            .concat(market.id)
+            .concat('-')
+            .concat(getEpochDays(blockTimestamp).toString())
+          let accountSnapshot = new AccountCTokenDailySnapshot(id)
+          accountSnapshot.account = accountCToken.account
+          accountSnapshot.market = marketID
+
+          // Compute snapshot fields
+          accountSnapshot.totalBorrows = accountCToken.totalUnderlyingBorrowed
+          accountSnapshot.totalSupplies = accountCToken.totalUnderlyingSupplied
+          accountSnapshot.totalBorrowsUSD = accountCToken.totalUnderlyingBorrowed
+            .times(market.underlyingPriceUSD)
+          accountSnapshot.totalSuppliesUSD = accountCToken.totalUnderlyingSupplied
+            .times(market.underlyingPriceUSD)
+
+          // Save the AccountCTokenDailySnapshot
+          log.warning("[accountSnapshot] id: {}", [accountSnapshot.id])
+          log.warning("[accountSnapshot] totalSupplies: {}", [accountSnapshot.totalSupplies.toString()])
+          log.warning("[accountSnapshot] totalBorrows: {}", [accountSnapshot.totalBorrows.toString()])
+          log.warning("[accountSnapshot] totalSuppliesUSD: {}", [accountSnapshot.totalSuppliesUSD.toString()])
+          log.warning("[accountSnapshot] totalBorrowsUSD: {}", [accountSnapshot.totalBorrowsUSD.toString()])
+          accountSnapshot.save()
+        }
+      }
+    }
   }
   return snapshot
 }
