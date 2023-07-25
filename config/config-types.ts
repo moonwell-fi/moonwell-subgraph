@@ -16,5 +16,7 @@ export class Config {
     public readonly protocolNativePairProtocolIndex: i32,
     public readonly governorAddr: string,
     public readonly oracleOverrides: Array<OracleOverride>,
+    public readonly safetyModuleAddr: string,
+    public readonly safetyModuleStartBlock: i32,
   ) {}
 }
