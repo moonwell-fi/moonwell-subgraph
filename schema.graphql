@@ -477,6 +477,7 @@ type StakingDailySnapshot @entity {
   " {staking smart contract address}-{epoch days} "
   id: ID!
 
+  stakedToken: String!
   totalStaked: BigDecimal!
   totalStakedUSD: BigDecimal!
 }

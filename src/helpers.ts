@@ -15,6 +15,7 @@ import {
   Market,
   MarketDailySnapshot,
   AccountCTokenDailySnapshot,
+  StakingDailySnapshot,
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import config from '../config/config'
@@ -118,7 +119,22 @@ export function getOrCreateComptroller(): Comptroller {
 export function getOrCreateStakingDailySnapshot(
   blockTimestamp: i32,
 ): StakingDailySnapshot {
-  
+  let snapshotID = config.safetyModuleAddr
+    .toLowerCase()
+    .concat('-')
+    .concat(getEpochDays(blockTimestamp).toString()
+  )
+  log.info('[getorCreateStakingDailySnapshot] snapshotID: {}', [snapshotID])
+  let snapshot = StakingDailySnapshot.load(snapshotID)
+  if (!snapshot) {
+    log.warning('[getorCreateStakingDailySnapshot] snapshot not found, creating new snapshot {}', [snapshotID])
+    snapshot = new StakingDailySnapshot(snapshotID)
+    snapshot.stakedToken = config.safetyModuleAddr.toLowerCase()
+    snapshot.totalStaked = zeroBD
+    snapshot.totalStakedUSD = zeroBD
+    snapshot.save()
+  }
+  return snapshot
 }
 
 export function getOrCreateMarketDailySnapshot(

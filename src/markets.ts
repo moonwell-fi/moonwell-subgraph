@@ -6,6 +6,7 @@ import { FeedProxy } from '../generated/Comptroller/FeedProxy'
 import { ERC20 } from '../generated/templates/CToken/ERC20'
 import { AccrueInterest, CToken } from '../generated/templates/CToken/CToken'
 import { SolarbeamLPToken } from '../generated/templates/CToken/SolarbeamLPToken'
+import { SafetyModule } from '../generated/templates/CToken/SafetyModule'
 
 import {
   exponentToBigDecimal,
@@ -22,6 +23,7 @@ import {
   addrEq,
   getOrCreateMarketDailySnapshot,
   secondsPerDay,
+  getOrCreateStakingDailySnapshot,
 } from './helpers'
 import config from '../config/config'
 
@@ -304,6 +306,20 @@ export function snapshotMarket(marketAddress: Address, blockTimestamp: i32): voi
   snapshot.totalSuppliesUSD = market.exchangeRate
     .times(market.totalSupply)
     .times(market.underlyingPriceUSD)
+  snapshot.save()
+}
+
+export function snapshotStaking(blockNumber: i32, blockTimestamp: i32): void {
+  // Don't try to attempt a snapshot before the contract is deployed
+  if (blockNumber < config.safetyModuleStartBlock) return
+  let snapshot = getOrCreateStakingDailySnapshot(blockTimestamp)
+  let safetyModuleContract = SafetyModule.bind(
+    Address.fromString(config.safetyModuleAddr),
+  )
+  let totalSupply = safetyModuleContract.totalSupply().toBigDecimal().div(mantissaFactorBD)
+  let totalSupplyUSD = totalSupply.times(getOneProtocolTokenInNativeToken(config.protocolNativePairProtocolIndex))
+  snapshot.totalStaked = totalSupply
+  snapshot.totalStakedUSD = totalSupplyUSD
   snapshot.save()
 }
 
