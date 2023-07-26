@@ -15,6 +15,7 @@ import {
   Market,
   MarketDailySnapshot,
   AccountCTokenDailySnapshot,
+  AccountDailySnapshot,
   StakingDailySnapshot,
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
@@ -137,6 +138,29 @@ export function getOrCreateStakingDailySnapshot(
   return snapshot
 }
 
+export function getOrCreateAccountDailySnapshot(
+  accountID: string,
+  blockTimestamp: i32,
+): AccountDailySnapshot {
+  let snapshotID = accountID
+    .toLowerCase()
+    .concat('-')
+    .concat(getEpochDays(blockTimestamp).toString()
+  )
+  log.info('[getOrCreateAccountDailySnapshot] snapshotID: {}', [snapshotID])
+  let snapshot = AccountDailySnapshot.load(snapshotID)
+  if (!snapshot) {
+    log.info('[getOrCreateAccountDailySnapshot] snapshot not found, creating new snapshot {}', [snapshotID])
+    snapshot = new AccountDailySnapshot(snapshotID)
+    snapshot.account = accountID.toLowerCase()
+    snapshot.totalSuppliesUSD = zeroBD
+    snapshot.totalBorrowsUSD = zeroBD
+    snapshot.collateralValueUSD = zeroBD
+    snapshot.save()
+  }
+  return snapshot
+}
+
 export function getOrCreateMarketDailySnapshot(
   marketID: string,
   blockTimestamp: i32,
@@ -183,14 +207,33 @@ export function getOrCreateMarketDailySnapshot(
             .times(market.underlyingPriceUSD)
           accountSnapshot.totalSuppliesUSD = accountCToken.totalUnderlyingSupplied
             .times(market.underlyingPriceUSD)
+          accountSnapshot.collateralFactor = market.collateralFactor
+          if (accountSnapshot.totalSupplies.gt(zeroBD)) {
+            accountSnapshot.collateralValueUSD =
+              accountSnapshot.totalSuppliesUSD
+                .times(market.collateralFactor)
+          } else {
+            accountSnapshot.collateralValueUSD = zeroBD
+          }
 
           // Save the AccountCTokenDailySnapshot
-          log.warning("[accountSnapshot] id: {}", [accountSnapshot.id])
-          log.warning("[accountSnapshot] totalSupplies: {}", [accountSnapshot.totalSupplies.toString()])
-          log.warning("[accountSnapshot] totalBorrows: {}", [accountSnapshot.totalBorrows.toString()])
-          log.warning("[accountSnapshot] totalSuppliesUSD: {}", [accountSnapshot.totalSuppliesUSD.toString()])
-          log.warning("[accountSnapshot] totalBorrowsUSD: {}", [accountSnapshot.totalBorrowsUSD.toString()])
           accountSnapshot.save()
+
+          // Update the AccountDailySnapshot
+          let accountDailySnapshot = getOrCreateAccountDailySnapshot(
+            accountCToken.account,
+            blockTimestamp,
+          )
+          accountDailySnapshot.totalSuppliesUSD = accountDailySnapshot.totalSuppliesUSD.plus(
+            accountSnapshot.totalSuppliesUSD,
+          )
+          accountDailySnapshot.totalBorrowsUSD = accountDailySnapshot.totalBorrowsUSD.plus(
+            accountSnapshot.totalBorrowsUSD,
+          )
+          accountDailySnapshot.collateralValueUSD = accountDailySnapshot.collateralValueUSD.plus(
+            accountSnapshot.collateralValueUSD,
+          )
+          accountDailySnapshot.save()
         }
       }
     }
