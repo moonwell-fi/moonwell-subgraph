@@ -317,9 +317,14 @@ export function snapshotStaking(blockNumber: i32, blockTimestamp: i32): void {
   let safetyModuleContract = SafetyModule.bind(
     Address.fromString(config.safetyModuleAddr),
   )
-  let totalSupply = safetyModuleContract.totalSupply().toBigDecimal().div(mantissaFactorBD)
-  let totalSupplyUSD = totalSupply.times(getOneProtocolTokenInNativeToken(config.protocolNativePairProtocolIndex))
-  snapshot.totalStaked = totalSupply
+  let totalSupply = safetyModuleContract.try_totalSupply()
+  if (totalSupply.reverted) {
+    log.warning('[snapshotStaking] try_totalSupply reverted on block {}', [blockNumber.toString()])
+    return
+  } else {
+    snapshot.totalStaked = totalSupply.value.toBigDecimal().div(mantissaFactorBD)
+  }
+  let totalSupplyUSD = snapshot.totalStaked.times(getOneProtocolTokenInNativeToken(config.protocolNativePairProtocolIndex))
   snapshot.totalStakedUSD = totalSupplyUSD
   snapshot.save()
 }
