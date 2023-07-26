@@ -53,6 +53,10 @@ dataSources:
           handler: handleNewBorrowCap
         - event: ActionPaused(address,string,bool)
           handler: handleMTokenActionPaused
+        - event: DistributedSupplierReward
+          handler: handleDistributedSupplierReward
+        - event: DistributedBorrowerReward
+          handler: handleDistributedBorrowerReward
   - kind: ethereum/contract
     name: Governor
     network: {{ network }}
