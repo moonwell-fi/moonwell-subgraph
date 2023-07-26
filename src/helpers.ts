@@ -183,13 +183,16 @@ export function getOrCreateMarketDailySnapshot(
             .times(market.underlyingPriceUSD)
           accountSnapshot.totalSuppliesUSD = accountCToken.totalUnderlyingSupplied
             .times(market.underlyingPriceUSD)
+          accountSnapshot.collateralFactor = market.collateralFactor
+          if (accountSnapshot.totalSupplies.gt(zeroBD)) {
+            accountSnapshot.collateralValueUSD =
+              accountSnapshot.totalSuppliesUSD
+                .times(market.collateralFactor)
+          } else {
+            accountSnapshot.collateralValueUSD = zeroBD
+          }
 
           // Save the AccountCTokenDailySnapshot
-          log.warning("[accountSnapshot] id: {}", [accountSnapshot.id])
-          log.warning("[accountSnapshot] totalSupplies: {}", [accountSnapshot.totalSupplies.toString()])
-          log.warning("[accountSnapshot] totalBorrows: {}", [accountSnapshot.totalBorrows.toString()])
-          log.warning("[accountSnapshot] totalSuppliesUSD: {}", [accountSnapshot.totalSuppliesUSD.toString()])
-          log.warning("[accountSnapshot] totalBorrowsUSD: {}", [accountSnapshot.totalBorrowsUSD.toString()])
           accountSnapshot.save()
         }
       }
