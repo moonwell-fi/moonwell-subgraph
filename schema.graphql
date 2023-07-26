@@ -475,6 +475,16 @@ type AccountCTokenDailySnapshot @entity {
   collateralValueUSD: BigDecimal!
 }
 
+type AccountDailySnapshot @entity {
+  " {accountID}-{epoch days} "
+  id: ID!
+  account: Account!
+
+  totalBorrowsUSD: BigDecimal!
+  totalSuppliesUSD: BigDecimal!
+  collateralValueUSD: BigDecimal!
+}
+
 type StakingDailySnapshot @entity {
   " {staking smart contract address}-{epoch days} "
   id: ID!
