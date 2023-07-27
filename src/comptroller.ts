@@ -215,17 +215,15 @@ export function handleDistributedSupplierReward(event: DistributedSupplierReward
   let comptrollerContract = ComptrollerContract.bind(
     Address.fromString(config.comptrollerAddr),
   )
-
   let accountID = event.params.borrower.toHexString()
-  let marketID = event.params.mToken.toHexString()
+  let marketID = event.params.mToken.toHexString().toLowerCase()
   let tokenType = event.params.tokenType
-  let tx_hash = event.transaction.hash.toHexString()
-  let wellDelta = event.params.wellDelta // not sure if we need these
-  let wellBorrowIndex = event.params.wellBorrowIndex // not sure if we need these
+  let tx_hash = event.transaction.hash.toHexString().toLowerCase()
+  let wellDelta = event.params.wellDelta
   let priceOfRewardToken = zeroBD
   let tokenSymbol = ''
   if (tokenType = NativeTokenRewardType) { // Type 1 = native token
-    let nativeMarket = Market.load(config.mNativeAddr)
+    let nativeMarket = Market.load(config.mNativeAddr.toLowerCase())
     if (nativeMarket) {
       tokenSymbol = config.nativeToken
       priceOfRewardToken = nativeMarket.underlyingPriceUSD
@@ -288,16 +286,15 @@ export function handleDistributedBorrowerReward(event: DistributedBorrowerReward
     Address.fromString(config.comptrollerAddr),
   )
 
-  let accountID = event.params.borrower.toHexString()
-  let marketID = event.params.mToken.toHexString()
+  let accountID = event.params.borrower.toHexString().toLowerCase()
+  let marketID = event.params.mToken.toHexString().toLowerCase()
   let tokenType = event.params.tokenType
-  let tx_hash = event.transaction.hash.toHexString()
-  let wellDelta = event.params.wellDelta // not sure if we need these
-  let wellBorrowIndex = event.params.wellBorrowIndex // not sure if we need these
+  let tx_hash = event.transaction.hash.toHexString().toLowerCase()
+  let wellDelta = event.params.wellDelta
   let priceOfRewardToken = zeroBD
   let tokenSymbol = ''
   if (tokenType = NativeTokenRewardType) { // Type 1 = native token
-    let nativeMarket = Market.load(config.mNativeAddr)
+    let nativeMarket = Market.load(config.mNativeAddr.toLowerCase())
     if (nativeMarket) {
       tokenSymbol = config.nativeToken
       priceOfRewardToken = nativeMarket.underlyingPriceUSD

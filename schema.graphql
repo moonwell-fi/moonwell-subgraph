@@ -509,7 +509,6 @@ type RewardClaimToken @entity {
   account: Account!
   tx_hash: RewardClaim!
   tokenSymbol: String!
-  tokenAddress: String!
   amount: BigDecimal!
   amountUSD: BigDecimal!
 }
