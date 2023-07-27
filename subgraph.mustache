@@ -53,9 +53,9 @@ dataSources:
           handler: handleNewBorrowCap
         - event: ActionPaused(address,string,bool)
           handler: handleMTokenActionPaused
-        - event: DistributedSupplierReward
+        - event: DistributedSupplierReward(indexed uint8,indexed address,indexed address,uint256,uint256)
           handler: handleDistributedSupplierReward
-        - event: DistributedBorrowerReward
+        - event: DistributedBorrowerReward(indexed uint8,indexed address,indexed address,uint256,uint256)
           handler: handleDistributedBorrowerReward
   - kind: ethereum/contract
     name: Governor

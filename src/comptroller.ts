@@ -1,4 +1,5 @@
 import { Address, log, dataSource } from '@graphprotocol/graph-ts'
+import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import {
   MarketEntered,
   MarketExited,
@@ -209,6 +210,11 @@ export function handleMTokenActionPaused(event: MTokenActionPaused): void {
 }
 
 export function handleDistributedSupplierReward(event: DistributedSupplierReward): void {
+  
+  let comptrollerContract = ComptrollerContract.bind(
+    Address.fromString(config.comptrollerAddr),
+  )
+
   let accountID = event.params.borrower.toHexString()
   let marketID = event.params.mToken.toHexString()
   let tokenType = event.params.tokenType
@@ -240,46 +246,36 @@ export function handleDistributedSupplierReward(event: DistributedSupplierReward
     log.warning('[handleDistributedSupplierReward] reward claim {} not found', [accountID])
     return
   }
+  
+  let try_accrued = comptrollerContract.try_rewardAccrued(tokenType, event.params.borrower);
+  if (try_accrued.reverted) {
+    log.warning('[handleDistributedSupplierReward] try_rewardAccrued('+tokenType.toString()+', '+accountID+') reverted', [])
+    return
+  } 
+
   let rewardClaimToken = getOrCreateRewardClaimToken(
     accountID,
     tx_hash,
-    tokenSymbol
+    tokenSymbol,
+    try_accrued.value.toBigDecimal()
   )
   if (!rewardClaimToken) {
     log.warning('[handleDistributedSupplierReward] reward claim token {} not found', [accountID])
     return
   }
 
-  /* function getSupplierReward(uint8 rewardType, address mTokenAddress, address supplier) public view returns (uint256) {
-      require(rewardType <= 1, "rewardType is invalid");
-
-      RewardMarketState storage supplyState = rewardSupplyState[rewardType][mTokenAddress];
-      Double memory supplyIndex = Double({mantissa: supplyState.index});
-      Double memory supplierIndex = Double({mantissa: rewardSupplierIndex[rewardType][mTokenAddress][supplier]});
-
-      if (supplierIndex.mantissa == 0 && supplyIndex.mantissa > 0) {
-        supplierIndex.mantissa = initialIndexConstant;
-      }
-
-      Double memory deltaIndex = sub_(supplyIndex, supplierIndex);
-      uint supplierTokens = MToken(mTokenAddress).balanceOf(supplier);
-      uint supplierDelta = mul_(supplierTokens, deltaIndex);
-      uint supplierAccrued = add_(rewardAccrued[rewardType][supplier], supplierDelta);
-
-      return supplierAccrued;
-    } */
-
-  // x0s0l - we need to make the same calls as the function above to assign amountReceived
-  let amountReceived = zeroBD // replace with calls to generate amount
-
   rewardClaimToken.amount = rewardClaimToken.amount
-    .plus(amountReceived)
-  rewardClaimToken.amountUSD = rewardClaimToken.amountUSD
-    .plus(amountReceived.times(priceOfRewardToken))
+    .plus(wellDelta.toBigDecimal())
+  rewardClaimToken.amountUSD = rewardClaimToken.amount.times(priceOfRewardToken)
   rewardClaimToken.save()
 }
 
 export function handleDistributedBorrowerReward(event: DistributedBorrowerReward): void {
+  
+  let comptrollerContract = ComptrollerContract.bind(
+    Address.fromString(config.comptrollerAddr),
+  )
+
   let accountID = event.params.borrower.toHexString()
   let marketID = event.params.mToken.toHexString()
   let tokenType = event.params.tokenType
@@ -311,42 +307,29 @@ export function handleDistributedBorrowerReward(event: DistributedBorrowerReward
     log.warning('[handleDistributedBorrowerReward] reward claim {} not found', [accountID])
     return
   }
+  
+  let try_accrued = comptrollerContract.try_rewardAccrued(tokenType, event.params.borrower);
+  if (try_accrued.reverted) {
+    log.warning('[handleDistributedSupplierReward] try_rewardAccrued('+tokenType.toString()+', '+accountID+') reverted', [])
+    return
+  } 
+
+  //we want to get previously accrued rewards just once, otherwise we will sum it wrong
   let rewardClaimToken = getOrCreateRewardClaimToken(
     accountID,
     tx_hash,
-    tokenSymbol
+    tokenSymbol,
+    try_accrued.value.toBigDecimal()
   )
   if (!rewardClaimToken) {
     log.warning('[handleDistributedBorrowerReward] reward claim token {} not found', [accountID])
     return
   }
 
-  /* function getBorrowerReward(uint8 rewardType, address mTokenAddress, address borrower) public view returns (uint) {
-      require(rewardType <= 1, "rewardType is invalid");
-
-      MToken mToken = MToken(mTokenAddress);
-      Exp memory marketBorrowIndex = Exp({mantissa: mToken.borrowIndex()});
-
-      RewardMarketState storage borrowState = rewardBorrowState[rewardType][mTokenAddress];
-      Double memory borrowIndex = Double({mantissa: borrowState.index});
-      Double memory borrowerIndex = Double({mantissa: rewardBorrowerIndex[rewardType][mTokenAddress][borrower]});
-
-      if (borrowerIndex.mantissa > 0) {
-        Double memory deltaIndex = sub_(borrowIndex, borrowerIndex);
-        uint borrowerAmount = div_(mToken.borrowBalanceStored(borrower), marketBorrowIndex);
-        uint borrowerDelta = mul_(borrowerAmount, deltaIndex);
-        uint borrowerAccrued = add_(rewardAccrued[rewardType][borrower], borrowerDelta);
-
-        return borrowerAccrued;
-      }
-      return 0;
-    } */
-  // x0s0l - we need to make the same calls as the function above to assign amountReceived
-  let amountReceived = zeroBD // replace with calls to generate amount
-
   rewardClaimToken.amount = rewardClaimToken.amount
-    .plus(amountReceived)
-  rewardClaimToken.amountUSD = rewardClaimToken.amountUSD
-    .plus(amountReceived.times(priceOfRewardToken))
+    .plus(wellDelta.toBigDecimal())
+
+  //the amount usd is always the sum amount * price, we want to recalculate it every time
+  rewardClaimToken.amountUSD = rewardClaimToken.amount.times(priceOfRewardToken)
   rewardClaimToken.save()
 }

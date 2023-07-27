@@ -160,6 +160,7 @@ export function getOrCreateRewardClaimToken(
   accountID: string,
   tx_hash: string,
   tokenSymbol: string,
+  accruedRewards: BigDecimal
 ): RewardClaimToken {
   log.info('[getOrCreateRewardClaimToken] accountID: {}, tx_hash: {}, tokenSymbol: {}', [accountID, tx_hash, tokenSymbol])
   let rewardClaimTokenID = accountID.toLowerCase()
@@ -173,7 +174,7 @@ export function getOrCreateRewardClaimToken(
     rewardClaimToken.account = accountID
     rewardClaimToken.tx_hash = tx_hash
     rewardClaimToken.tokenSymbol = tokenSymbol
-    rewardClaimToken.amount = zeroBD
+    rewardClaimToken.amount = accruedRewards
     rewardClaimToken.amountUSD = zeroBD
     rewardClaimToken.save()
   }
