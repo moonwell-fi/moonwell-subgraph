@@ -250,13 +250,13 @@ export function handleDistributedSupplierReward(event: DistributedSupplierReward
   if (try_accrued.reverted) {
     log.warning('[handleDistributedSupplierReward] try_rewardAccrued({}, {}) reverted', [tokenType.toString(), accountID])
     return
-  } 
+  }
 
   let rewardClaimToken = getOrCreateRewardClaimToken(
     accountID,
     tx_hash,
     tokenSymbol,
-    try_accrued.value.toBigDecimal()
+    try_accrued.value.toBigDecimal().div(mantissaFactorBD)
   )
   if (!rewardClaimToken) {
     log.warning('[handleDistributedSupplierReward] reward claim token {} not found', [accountID])
@@ -264,7 +264,7 @@ export function handleDistributedSupplierReward(event: DistributedSupplierReward
   }
 
   rewardClaimToken.amount = rewardClaimToken.amount
-    .plus(wellDelta.toBigDecimal())
+    .plus(wellDelta.toBigDecimal().div(mantissaFactorBD))
   rewardClaimToken.amountUSD = rewardClaimToken.amount.times(priceOfRewardToken)
   rewardClaimToken.save()
   // Now update lifetime rewards
@@ -274,9 +274,9 @@ export function handleDistributedSupplierReward(event: DistributedSupplierReward
     return
   }
   lifetimeRewards.amount = lifetimeRewards.amount
-    .plus(try_accrued.value.toBigDecimal())
+    .plus(rewardClaimToken.amount)
   lifetimeRewards.amountUSD = lifetimeRewards.amount
-    .times(priceOfRewardToken)
+    .plus(rewardClaimToken.amountUSD)
   lifetimeRewards.save()
 }
 
@@ -328,7 +328,7 @@ export function handleDistributedBorrowerReward(event: DistributedBorrowerReward
     accountID,
     tx_hash,
     tokenSymbol,
-    try_accrued.value.toBigDecimal()
+    try_accrued.value.toBigDecimal().div(mantissaFactorBD)
   )
   if (!rewardClaimToken) {
     log.warning('[handleDistributedBorrowerReward] reward claim token {} not found', [accountID])
@@ -336,9 +336,20 @@ export function handleDistributedBorrowerReward(event: DistributedBorrowerReward
   }
 
   rewardClaimToken.amount = rewardClaimToken.amount
-    .plus(wellDelta.toBigDecimal())
+    .plus(wellDelta.toBigDecimal().div(mantissaFactorBD))
 
   //the amount usd is always the sum amount * price, we want to recalculate it every time
   rewardClaimToken.amountUSD = rewardClaimToken.amount.times(priceOfRewardToken)
   rewardClaimToken.save()
+  // Now update lifetime rewards
+  let lifetimeRewards = getOrCreateLifetimeRewards(accountID, tokenSymbol)
+  if (!lifetimeRewards) {
+    log.warning('[handleDistributedSupplierReward] lifetime rewards {} not found', [accountID])
+    return
+  }
+  lifetimeRewards.amount = lifetimeRewards.amount
+    .plus(rewardClaimToken.amount)
+  lifetimeRewards.amountUSD = lifetimeRewards.amount
+    .plus(rewardClaimToken.amountUSD)
+  lifetimeRewards.save()
 }
