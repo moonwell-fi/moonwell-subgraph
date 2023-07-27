@@ -250,23 +250,23 @@ export function handleDistributedSupplierReward(event: DistributedSupplierReward
     return
   }
 
-  /* function distributeSupplierReward(uint8 rewardType, address mToken, address supplier) internal {
+  /* function getSupplierReward(uint8 rewardType, address mTokenAddress, address supplier) public view returns (uint256) {
       require(rewardType <= 1, "rewardType is invalid");
-      RewardMarketState storage supplyState = rewardSupplyState[rewardType][mToken];
+
+      RewardMarketState storage supplyState = rewardSupplyState[rewardType][mTokenAddress];
       Double memory supplyIndex = Double({mantissa: supplyState.index});
-      Double memory supplierIndex = Double({mantissa: rewardSupplierIndex[rewardType][mToken][supplier]});
-      rewardSupplierIndex[rewardType][mToken][supplier] = supplyIndex.mantissa;
+      Double memory supplierIndex = Double({mantissa: rewardSupplierIndex[rewardType][mTokenAddress][supplier]});
 
       if (supplierIndex.mantissa == 0 && supplyIndex.mantissa > 0) {
         supplierIndex.mantissa = initialIndexConstant;
       }
 
       Double memory deltaIndex = sub_(supplyIndex, supplierIndex);
-      uint supplierTokens = MToken(mToken).balanceOf(supplier);
+      uint supplierTokens = MToken(mTokenAddress).balanceOf(supplier);
       uint supplierDelta = mul_(supplierTokens, deltaIndex);
       uint supplierAccrued = add_(rewardAccrued[rewardType][supplier], supplierDelta);
-      rewardAccrued[rewardType][supplier] = supplierAccrued;
-      emit DistributedSupplierReward(rewardType, MToken(mToken), supplier, supplierDelta, supplyIndex.mantissa);
+
+      return supplierAccrued;
     } */
 
   // x0s0l - we need to make the same calls as the function above to assign amountReceived
@@ -280,5 +280,73 @@ export function handleDistributedSupplierReward(event: DistributedSupplierReward
 }
 
 export function handleDistributedBorrowerReward(event: DistributedBorrowerReward): void {
-  // TODO: implement
+  let accountID = event.params.borrower.toHexString()
+  let marketID = event.params.mToken.toHexString()
+  let tokenType = event.params.tokenType
+  let tx_hash = event.transaction.hash.toHexString()
+  let wellDelta = event.params.wellDelta // not sure if we need these
+  let wellBorrowIndex = event.params.wellBorrowIndex // not sure if we need these
+  let priceOfRewardToken = zeroBD
+  let tokenSymbol = ''
+  if (tokenType = NativeTokenRewardType) { // Type 1 = native token
+    let nativeMarket = Market.load(config.mNativeAddr)
+    if (nativeMarket) {
+      tokenSymbol = config.nativeToken
+      priceOfRewardToken = nativeMarket.underlyingPriceUSD
+    } else {
+      log.warning('[handleDistributedBorrowerReward] native market {} not found', [config.mNativeAddr])
+      return
+    }
+  } else { // Type 0 = protocol token
+    tokenSymbol = config.govTokenSymbol
+    priceOfRewardToken = getOneProtocolTokenInNativeToken(config.protocolNativePairProtocolIndex)
+  }
+  let market = Market.load(marketID)
+  if (!market) {
+    log.warning('[handleDistributedBorrowerReward] market {} not found', [marketID])
+    return
+  }
+  let rewardClaim = getOrCreateRewardClaim(accountID, tx_hash)
+  if (!rewardClaim) {
+    log.warning('[handleDistributedBorrowerReward] reward claim {} not found', [accountID])
+    return
+  }
+  let rewardClaimToken = getOrCreateRewardClaimToken(
+    accountID,
+    tx_hash,
+    tokenSymbol
+  )
+  if (!rewardClaimToken) {
+    log.warning('[handleDistributedBorrowerReward] reward claim token {} not found', [accountID])
+    return
+  }
+
+  /* function getBorrowerReward(uint8 rewardType, address mTokenAddress, address borrower) public view returns (uint) {
+      require(rewardType <= 1, "rewardType is invalid");
+
+      MToken mToken = MToken(mTokenAddress);
+      Exp memory marketBorrowIndex = Exp({mantissa: mToken.borrowIndex()});
+
+      RewardMarketState storage borrowState = rewardBorrowState[rewardType][mTokenAddress];
+      Double memory borrowIndex = Double({mantissa: borrowState.index});
+      Double memory borrowerIndex = Double({mantissa: rewardBorrowerIndex[rewardType][mTokenAddress][borrower]});
+
+      if (borrowerIndex.mantissa > 0) {
+        Double memory deltaIndex = sub_(borrowIndex, borrowerIndex);
+        uint borrowerAmount = div_(mToken.borrowBalanceStored(borrower), marketBorrowIndex);
+        uint borrowerDelta = mul_(borrowerAmount, deltaIndex);
+        uint borrowerAccrued = add_(rewardAccrued[rewardType][borrower], borrowerDelta);
+
+        return borrowerAccrued;
+      }
+      return 0;
+    } */
+  // x0s0l - we need to make the same calls as the function above to assign amountReceived
+  let amountReceived = zeroBD // replace with calls to generate amount
+
+  rewardClaimToken.amount = rewardClaimToken.amount
+    .plus(amountReceived)
+  rewardClaimToken.amountUSD = rewardClaimToken.amountUSD
+    .plus(amountReceived.times(priceOfRewardToken))
+  rewardClaimToken.save()
 }
