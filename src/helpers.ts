@@ -17,6 +17,9 @@ import {
   AccountCTokenDailySnapshot,
   AccountDailySnapshot,
   StakingDailySnapshot,
+  RewardClaim,
+  RewardClaimToken,
+  LifetimeRewards,
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import config from '../config/config'
@@ -115,6 +118,66 @@ export function getOrCreateComptroller(): Comptroller {
     }
   }
   return comptroller
+}
+
+export function getOrCreateLifetimeRewards(
+  accountID: string,
+  tokenSymbol: string,
+): LifetimeRewards {
+  log.info('[getOrCreateLifetimeRewards] accountID: {}', [accountID])
+  let lifetimeRewards = LifetimeRewards.load(accountID)
+  if (!lifetimeRewards) {
+    log.warning('[getOrCreateLifetimeRewards] lifetimeRewards not found, creating new lifetimeRewards {}', [accountID])
+    lifetimeRewards = new LifetimeRewards(accountID)
+    lifetimeRewards.account = accountID
+    lifetimeRewards.tokenSymbol = tokenSymbol
+    lifetimeRewards.amount = zeroBD
+    lifetimeRewards.amountUSD = zeroBD
+    lifetimeRewards.save()
+  }
+  return lifetimeRewards
+}
+
+export function getOrCreateRewardClaim(
+  accountID: string,
+  tx_hash: string,
+): RewardClaim {
+  log.info('[createRewardClaim] accountID: {}, tx_hash: {}', [accountID, tx_hash])
+  let rewardClaimID = accountID.toLowerCase()
+    .concat('-')
+    .concat(tx_hash.toLowerCase())
+  let rewardClaim = RewardClaim.load(rewardClaimID)
+  if (!rewardClaim) {
+    rewardClaim = new RewardClaim(rewardClaimID)
+    rewardClaim.account = accountID.toLowerCase()
+    rewardClaim.tx_hash = tx_hash.toLowerCase()
+    rewardClaim.save()
+  }
+  return rewardClaim
+}
+
+export function getOrCreateRewardClaimToken(
+  accountID: string,
+  tx_hash: string,
+  tokenSymbol: string,
+): RewardClaimToken {
+  log.info('[getOrCreateRewardClaimToken] accountID: {}, tx_hash: {}, tokenSymbol: {}', [accountID, tx_hash, tokenSymbol])
+  let rewardClaimTokenID = accountID.toLowerCase()
+    .concat('-')
+    .concat(tx_hash.toLowerCase())
+    .concat('-')
+    .concat(tokenSymbol.toLowerCase())
+  let rewardClaimToken = RewardClaimToken.load(rewardClaimTokenID)
+  if (!rewardClaimToken) {
+    rewardClaimToken = new RewardClaimToken(rewardClaimTokenID)
+    rewardClaimToken.account = accountID
+    rewardClaimToken.tx_hash = tx_hash
+    rewardClaimToken.tokenSymbol = tokenSymbol
+    rewardClaimToken.amount = zeroBD
+    rewardClaimToken.amountUSD = zeroBD
+    rewardClaimToken.save()
+  }
+  return rewardClaimToken
 }
 
 export function getOrCreateStakingDailySnapshot(

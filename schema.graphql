@@ -493,3 +493,33 @@ type StakingDailySnapshot @entity {
   totalStaked: BigDecimal!
   totalStakedUSD: BigDecimal!
 }
+
+type RewardClaim @entity {
+  " {accountID}-{tx_hash} "
+  id: ID!
+  account: Account!
+  tx_hash: String!
+
+  tokens: [RewardClaimToken!]! @derivedFrom(field: "tx_hash")
+}
+
+type RewardClaimToken @entity {
+  " {accountID}-{tx_hash}-{tokenSymbol} "
+  id: ID!
+  account: Account!
+  tx_hash: RewardClaim!
+  tokenSymbol: String!
+  tokenAddress: String!
+  amount: BigDecimal!
+  amountUSD: BigDecimal!
+}
+
+type LifetimeRewards @entity {
+  " {accountID}-{token symbol} "
+  id: ID!
+  account: Account!
+
+  tokenSymbol: String!
+  amount: BigDecimal!
+  amountUSD: BigDecimal!
+}

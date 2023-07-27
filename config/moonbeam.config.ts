@@ -11,6 +11,7 @@ const config = new Config(
   [],
   '0x8568a675384d761f36ec269d695d6ce4423cfab1',
   1012189,
+  'WELL',
 )
 
 export default config

@@ -11,20 +11,26 @@ import {
   BorrowRewardSpeedUpdated,
   NewBorrowCap,
   ActionPaused1 as MTokenActionPaused,
+  DistributedSupplierReward,
+  DistributedBorrowerReward,
 } from '../generated/Comptroller/Comptroller'
 
 import { CToken } from '../generated/templates'
 import { Market, Account, Comptroller } from '../generated/schema'
 import {
+  zeroBD,
   mantissaFactorBD,
   updateCommonCTokenStats,
   createAccount,
   getOrCreateComptroller,
   ProtocolTokenRewardType,
   NativeTokenRewardType,
+  getOrCreateRewardClaim,
+  getOrCreateRewardClaimToken
 } from './helpers'
-import { createMarket } from './markets'
+import { createMarket, getOneProtocolTokenInNativeToken } from './markets'
 import { Feed } from '../generated/templates'
+import config from '../config/config'
 
 export function handleMarketListed(event: MarketListed): void {
   // Dynamically index all new listed tokens
@@ -200,4 +206,79 @@ export function handleMTokenActionPaused(event: MTokenActionPaused): void {
     market.borrowPaused = event.params.pauseState
   }
   market.save()
+}
+
+export function handleDistributedSupplierReward(event: DistributedSupplierReward): void {
+  let accountID = event.params.borrower.toHexString()
+  let marketID = event.params.mToken.toHexString()
+  let tokenType = event.params.tokenType
+  let tx_hash = event.transaction.hash.toHexString()
+  let wellDelta = event.params.wellDelta // not sure if we need these
+  let wellBorrowIndex = event.params.wellBorrowIndex // not sure if we need these
+  let priceOfRewardToken = zeroBD
+  let tokenSymbol = ''
+  if (tokenType = NativeTokenRewardType) { // Type 1 = native token
+    let nativeMarket = Market.load(config.mNativeAddr)
+    if (nativeMarket) {
+      tokenSymbol = config.nativeToken
+      priceOfRewardToken = nativeMarket.underlyingPriceUSD
+    } else {
+      log.warning('[handleDistributedSupplierReward] native market {} not found', [config.mNativeAddr])
+      return
+    }
+  } else { // Type 0 = protocol token
+    tokenSymbol = config.govTokenSymbol
+    priceOfRewardToken = getOneProtocolTokenInNativeToken(config.protocolNativePairProtocolIndex)
+  }
+  let market = Market.load(marketID)
+  if (!market) {
+    log.warning('[handleDistributedSupplierReward] market {} not found', [marketID])
+    return
+  }
+  let rewardClaim = getOrCreateRewardClaim(accountID, tx_hash)
+  if (!rewardClaim) {
+    log.warning('[handleDistributedSupplierReward] reward claim {} not found', [accountID])
+    return
+  }
+  let rewardClaimToken = getOrCreateRewardClaimToken(
+    accountID,
+    tx_hash,
+    tokenSymbol
+  )
+  if (!rewardClaimToken) {
+    log.warning('[handleDistributedSupplierReward] reward claim token {} not found', [accountID])
+    return
+  }
+
+  /* function distributeSupplierReward(uint8 rewardType, address mToken, address supplier) internal {
+      require(rewardType <= 1, "rewardType is invalid");
+      RewardMarketState storage supplyState = rewardSupplyState[rewardType][mToken];
+      Double memory supplyIndex = Double({mantissa: supplyState.index});
+      Double memory supplierIndex = Double({mantissa: rewardSupplierIndex[rewardType][mToken][supplier]});
+      rewardSupplierIndex[rewardType][mToken][supplier] = supplyIndex.mantissa;
+
+      if (supplierIndex.mantissa == 0 && supplyIndex.mantissa > 0) {
+        supplierIndex.mantissa = initialIndexConstant;
+      }
+
+      Double memory deltaIndex = sub_(supplyIndex, supplierIndex);
+      uint supplierTokens = MToken(mToken).balanceOf(supplier);
+      uint supplierDelta = mul_(supplierTokens, deltaIndex);
+      uint supplierAccrued = add_(rewardAccrued[rewardType][supplier], supplierDelta);
+      rewardAccrued[rewardType][supplier] = supplierAccrued;
+      emit DistributedSupplierReward(rewardType, MToken(mToken), supplier, supplierDelta, supplyIndex.mantissa);
+    } */
+
+  // x0s0l - we need to make the same calls as the function above to assign amountReceived
+  let amountReceived = zeroBD // replace with calls to generate amount
+
+  rewardClaimToken.amount = rewardClaimToken.amount
+    .plus(amountReceived)
+  rewardClaimToken.amountUSD = rewardClaimToken.amountUSD
+    .plus(amountReceived.times(priceOfRewardToken))
+  rewardClaimToken.save()
+}
+
+export function handleDistributedBorrowerReward(event: DistributedBorrowerReward): void {
+  // TODO: implement
 }

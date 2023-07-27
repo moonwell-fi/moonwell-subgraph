@@ -329,7 +329,7 @@ export function snapshotStaking(blockNumber: i32, blockTimestamp: i32): void {
   snapshot.save()
 }
 
-function getOneProtocolTokenInNativeToken(protocolIndex: i32): BigDecimal {
+export function getOneProtocolTokenInNativeToken(protocolIndex: i32): BigDecimal {
   let lpTokenContract = SolarbeamLPToken.bind(
     Address.fromString(config.protocolNativePairAddr),
   )

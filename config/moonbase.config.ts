@@ -11,6 +11,7 @@ const config = new Config(
   [],
   '0x11fD9c97B0B8F50f6EB0e68342e3de8F76dd45fc',
   2621451,
+  'MFAM',
 )
 
 export default config
