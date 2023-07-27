@@ -27,7 +27,8 @@ import {
   ProtocolTokenRewardType,
   NativeTokenRewardType,
   getOrCreateRewardClaim,
-  getOrCreateRewardClaimToken
+  getOrCreateRewardClaimToken,
+  getOrCreateLifetimeRewards
 } from './helpers'
 import { createMarket, getOneProtocolTokenInNativeToken } from './markets'
 import { Feed } from '../generated/templates'
@@ -249,7 +250,7 @@ export function handleDistributedSupplierReward(event: DistributedSupplierReward
   
   let try_accrued = comptrollerContract.try_rewardAccrued(tokenType, event.params.borrower);
   if (try_accrued.reverted) {
-    log.warning('[handleDistributedSupplierReward] try_rewardAccrued('+tokenType.toString()+', '+accountID+') reverted', [])
+    log.warning('[handleDistributedSupplierReward] try_rewardAccrued({}, {}) reverted', [tokenType.toString(), accountID])
     return
   } 
 
@@ -268,6 +269,17 @@ export function handleDistributedSupplierReward(event: DistributedSupplierReward
     .plus(wellDelta.toBigDecimal())
   rewardClaimToken.amountUSD = rewardClaimToken.amount.times(priceOfRewardToken)
   rewardClaimToken.save()
+  // Now update lifetime rewards
+  let lifetimeRewards = getOrCreateLifetimeRewards(accountID, tokenSymbol)
+  if (!lifetimeRewards) {
+    log.warning('[handleDistributedSupplierReward] lifetime rewards {} not found', [accountID])
+    return
+  }
+  lifetimeRewards.amount = lifetimeRewards.amount
+    .plus(try_accrued.value.toBigDecimal())
+  lifetimeRewards.amountUSD = lifetimeRewards.amount
+    .times(priceOfRewardToken)
+  lifetimeRewards.save()
 }
 
 export function handleDistributedBorrowerReward(event: DistributedBorrowerReward): void {
