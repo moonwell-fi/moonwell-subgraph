@@ -1,6 +1,6 @@
 {
   "network": "base-testnet",
-  "comptrollerAddr": "0x8E00D5e02E65A19337Cdba98bbA9F84d4186a180",
+  "comptrollerAddr": "0xa1939Fcf6aA77a68a1f55Ff759c8Fe6a0eC59020",
   "comptrollerStartBlock": 7612258,
   "governorAddr": "0x0000000000000000000000000000000000000000",
   "governorStartBlock": 2147483647

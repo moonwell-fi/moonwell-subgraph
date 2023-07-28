@@ -119,8 +119,8 @@ export function createMarket(marketID: string): Market | null {
       : market.underlyingSymbol
   let feedProxyAddress = oracle.getFeed(symbol)
   let feedProxy = FeedProxy.bind(feedProxyAddress)
-  if (dataSource.network() == 'mbase') {
-    // FeedProxy on moonbase doesn't have aggregator, skip it
+  if (dataSource.network() == 'mbase' || dataSource.network() == 'base-testnet') {
+    // FeedProxy on moonbase and base-testnet doesn't have aggregator, skip it
     market._feed = '0x0000000000000000000000000000000000000000'
   } else {
     market._feed = feedProxy.aggregator().toHexString()

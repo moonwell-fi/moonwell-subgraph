@@ -45,8 +45,8 @@ export function handleMarketListed(event: MarketListed): void {
   comptroller._markets = markets
   comptroller.save()
 
-  if (dataSource.network() != 'mbase') {
-    // ignore feed on moonbase
+  if (dataSource.network() != 'mbase' && dataSource.network() != 'base-testnet') {
+    // ignore feed on moonbase and base-testnet
     Feed.create(Address.fromString(market._feed))
   }
 }
