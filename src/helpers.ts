@@ -20,6 +20,7 @@ import {
 } from '../generated/schema'
 import { Comptroller as ComptrollerContract } from '../generated/Comptroller/Comptroller'
 import config from '../config/config'
+import { CToken } from '../generated/templates/CToken/CToken'
 
 export const BIGINT_ZERO = BigInt.fromI32(0)
 
@@ -201,11 +202,25 @@ export function getOrCreateMarketDailySnapshot(
           accountSnapshot.market = marketID
 
           // Compute snapshot fields
-          accountSnapshot.totalBorrows = accountCToken.totalUnderlyingBorrowed
-          accountSnapshot.totalSupplies = accountCToken.totalUnderlyingSupplied
-          accountSnapshot.totalBorrowsUSD = accountCToken.totalUnderlyingBorrowed
+          // This call should return the current/up to date borrow balance of the account
+          let contract = CToken.bind(Address.fromString(market.id))
+          let borrowBalanceResult = contract.try_borrowBalanceCurrent(Address.fromString(accountCToken.account))
+          if (borrowBalanceResult.reverted) {
+            log.warning('[getOrCreateMarketDailySnapshot] try_borrowBalanceCurrent reverted; market: {} account: {}', [
+              market.id,
+              accountCToken.account,
+            ])
+            accountSnapshot.totalBorrows = zeroBD
+          } else {
+            accountSnapshot.totalBorrows = borrowBalanceResult.value.toBigDecimal().div(
+              exponentToBigDecimal(market.underlyingDecimals))
+          }
+          accountSnapshot.totalSupplies = accountCToken.cTokenBalance
+            .times(market.exchangeRate)
+          accountSnapshot.totalBorrowsUSD = accountSnapshot.totalBorrows
             .times(market.underlyingPriceUSD)
-          accountSnapshot.totalSuppliesUSD = accountCToken.totalUnderlyingSupplied
+          accountSnapshot.totalSuppliesUSD = accountCToken.cTokenBalance
+            .times(market.exchangeRate)
             .times(market.underlyingPriceUSD)
           accountSnapshot.collateralFactor = market.collateralFactor
           if (accountSnapshot.totalSupplies.gt(zeroBD)) {
