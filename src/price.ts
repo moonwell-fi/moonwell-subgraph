@@ -35,6 +35,18 @@ export function handleBlock(block: ethereum.Block): void {
       Feed.create(newFeed)
     }
   }
+  let comptroller = Comptroller.load('1')!
+  let markets: Market[] = []
+  for (let i = 0; i < comptroller._markets.length; i++) {
+    let marketID = comptroller._markets[i]
+    let market = Market.load(marketID)
+    if (!market) {
+      log.warning('[handleBlock] market {} not found', [marketID])
+      continue
+    }
+    snapshotMarket(Address.fromString(market.id), block.timestamp.toI32())
+  }
+  snapshotStaking(block.number.toI32(), block.timestamp.toI32())
 }
 
 // Update market price when feed contract emits AnswerUpdated
