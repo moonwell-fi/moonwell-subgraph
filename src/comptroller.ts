@@ -1,4 +1,4 @@
-import { Address, log, dataSource } from '@graphprotocol/graph-ts'
+import { Address, log, dataSource, ethereum, BigInt } from '@graphprotocol/graph-ts'
 import {
   MarketEntered,
   MarketExited,
@@ -7,8 +7,6 @@ import {
   NewLiquidationIncentive,
   NewPriceOracle,
   MarketListed,
-  SupplyRewardSpeedUpdated,
-  BorrowRewardSpeedUpdated,
   NewBorrowCap,
   ActionPaused1 as MTokenActionPaused,
 } from '../generated/Comptroller/Comptroller'
@@ -20,11 +18,10 @@ import {
   updateCommonCTokenStats,
   createAccount,
   getOrCreateComptroller,
-  ProtocolTokenRewardType,
-  NativeTokenRewardType,
 } from './helpers'
 import { createMarket } from './markets'
 import { Feed } from '../generated/templates'
+import { snapshotMarket } from './markets'
 
 export function handleMarketListed(event: MarketListed): void {
   // Dynamically index all new listed tokens
@@ -136,42 +133,6 @@ export function handleNewPriceOracle(event: NewPriceOracle): void {
   let comptroller = getOrCreateComptroller()
   comptroller.priceOracle = event.params.newPriceOracle.toHexString()
   comptroller.save()
-}
-
-export function handleSupplyRewardSpeedUpdated(event: SupplyRewardSpeedUpdated): void {
-  let marketID = event.params.mToken.toHexString()
-  let market = Market.load(marketID)
-  if (!market) {
-    log.warning('[handleSupplyRewardSpeedUpdated] market {} not found', [marketID])
-    return
-  }
-
-  let rewardType = event.params.rewardToken
-  let newSpeed = event.params.newSupplyRewardSpeed
-  if (rewardType == ProtocolTokenRewardType) {
-    market.supplyRewardSpeedProtocol = newSpeed
-  } else if (rewardType == NativeTokenRewardType) {
-    market.supplyRewardSpeedNative = newSpeed
-  }
-  market.save()
-}
-
-export function handleBorrowRewardSpeedUpdated(event: BorrowRewardSpeedUpdated): void {
-  let marketID = event.params.mToken.toHexString()
-  let market = Market.load(marketID)
-  if (!market) {
-    log.warning('[handleBorrowRewardSpeedUpdated] market {} not found', [marketID])
-    return
-  }
-
-  let rewardType = event.params.rewardToken
-  let newSpeed = event.params.newBorrowRewardSpeed
-  if (rewardType == ProtocolTokenRewardType) {
-    market.borrowRewardSpeedProtocol = newSpeed
-  } else if (rewardType == NativeTokenRewardType) {
-    market.borrowRewardSpeedNative = newSpeed
-  }
-  market.save()
 }
 
 export function handleNewBorrowCap(event: NewBorrowCap): void {

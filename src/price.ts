@@ -6,8 +6,7 @@ import { PriceOracle } from '../generated/templates/CToken/PriceOracle'
 import { addrEq, exponentToBigDecimal, zeroBD } from './helpers'
 import config from '../config/config'
 import { Feed } from '../generated/templates'
-import { snapshotMarket } from './markets'
-import { snapshotStaking } from './markets'
+import { snapshotMarket, snapshotStaking } from './markets'
 
 // Special handler that hardcodes _feed for certain market at a certain block.
 // This is necessary because Chainlink could change mtoken feed address through private transaction
@@ -71,7 +70,7 @@ export function handleAnswerUpdated(event: AnswerUpdated): void {
     market.underlyingPriceUSD = underlyingTokenPriceUSD
     if (!addrEq(market.id, config.mNativeAddr)) {
       let nativeTokenPriceUSD = getTokenPrice(Address.fromString(config.mNativeAddr), 18)
-      if (nativeTokenPriceUSD.ge(zeroBD)) {
+      if (nativeTokenPriceUSD.gt(zeroBD)) {
         market.underlyingPrice = underlyingTokenPriceUSD.div(nativeTokenPriceUSD)
       }
     }

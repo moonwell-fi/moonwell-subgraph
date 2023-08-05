@@ -75,38 +75,6 @@ type Market @entity {
   "The history of the markets borrow index return (Think S&P 500)"
   borrowIndex: BigInt!
 
-  "comptroller.borrowRewardSpeeds(MOVR, MTOKEN)"
-  borrowRewardSpeedNative: BigInt!
-
-  "comptroller.borrowRewardSpeeds(MFAM, MTOKEN)"
-  borrowRewardSpeedProtocol: BigInt!
-
-  "comptroller.supplyRewardSpeeds(MOVR, MTOKEN)"
-  supplyRewardSpeedNative: BigInt!
-
-  "comptroller.supplyRewardSpeeds(MFAM, MTOKEN)"
-  supplyRewardSpeedProtocol: BigInt!
-
-  borrowRewardNative: BigDecimal!
-
-  borrowRewardProtocol: BigDecimal!
-
-  supplyRewardNative: BigDecimal!
-
-  supplyRewardProtocol: BigDecimal!
-
-  borrowRewardStateNativeIndex: BigInt!
-  borrowRewardStateNativeTimestamp: Int!
-
-  borrowRewardStateProtocolIndex: BigInt!
-  borrowRewardStateProtocolTimestamp: Int!
-
-  supplyRewardStateNativeIndex: BigInt!
-  supplyRewardStateNativeTimestamp: Int!
-
-  supplyRewardStateProtocolIndex: BigInt!
-  supplyRewardStateProtocolTimestamp: Int!
-
   borrowCap: BigInt!
 
   "The factor determining interest that goes to reserves"

@@ -16,13 +16,8 @@ import {
   zeroBD,
   convertSecondRateMantissaToAPY,
   zeroBI,
-  daysPerYear,
-  intToBigDecimal,
-  ProtocolTokenRewardType,
-  NativeTokenRewardType,
   addrEq,
   getOrCreateMarketDailySnapshot,
-  secondsPerDay,
   getOrCreateStakingDailySnapshot,
 } from './helpers'
 import config from '../config/config'
@@ -80,27 +75,7 @@ export function createMarket(marketID: string): Market | null {
   market.borrowCap = zeroBI
 
   market.borrowIndex = zeroBI
-  market.borrowRewardSpeedNative = zeroBI
-  market.borrowRewardSpeedProtocol = zeroBI
-  market.supplyRewardSpeedNative = zeroBI
-  market.supplyRewardSpeedProtocol = zeroBI
   market.reserveFactor = reserveFactor.reverted ? BigInt.fromI32(0) : reserveFactor.value
-  market.borrowRewardSpeedNative = zeroBI
-  market.borrowRewardSpeedProtocol = zeroBI
-  market.supplyRewardSpeedNative = zeroBI
-  market.supplyRewardSpeedProtocol = zeroBI
-  market.borrowRewardNative = zeroBD
-  market.borrowRewardProtocol = zeroBD
-  market.supplyRewardNative = zeroBD
-  market.supplyRewardProtocol = zeroBD
-  market.borrowRewardStateNativeIndex = zeroBI
-  market.borrowRewardStateNativeTimestamp = 0
-  market.borrowRewardStateProtocolIndex = zeroBI
-  market.borrowRewardStateProtocolTimestamp = 0
-  market.supplyRewardStateNativeIndex = zeroBI
-  market.supplyRewardStateNativeTimestamp = 0
-  market.supplyRewardStateProtocolIndex = zeroBI
-  market.supplyRewardStateProtocolTimestamp = 0
 
   market.accrualBlockTimestamp = 0
   market.blockTimestamp = 0
@@ -119,11 +94,14 @@ export function createMarket(marketID: string): Market | null {
       : market.underlyingSymbol
   let feedProxyAddress = oracle.getFeed(symbol)
   let feedProxy = FeedProxy.bind(feedProxyAddress)
-  if (dataSource.network() == 'mbase' || dataSource.network() == 'base-testnet') {
-    // FeedProxy on moonbase and base-testnet doesn't have aggregator, skip it
-    market._feed = '0x0000000000000000000000000000000000000000'
+  const result = feedProxy.try_aggregator()
+  if (result.reverted) {
+    log.warning('[createMarket] try_aggregator on {} reverted', [
+      feedProxyAddress.toHexString(),
+    ])
+    market._feed = feedProxyAddress.toHexString() // fallback to feedProxy address
   } else {
-    market._feed = feedProxy.aggregator().toHexString()
+    market._feed = result.value.toHexString()
   }
 
   return market
@@ -175,100 +153,6 @@ export function updateMarket(
       .div(exponentToBigDecimal(market.underlyingDecimals))
       .truncate(market.underlyingDecimals)
     market.borrowIndex = event.params.borrowIndex
-
-    let nativeMarket = Market.load(Address.fromString(config.mNativeAddr).toHexString())
-    if (nativeMarket) {
-      let nativeTokenPriceUSD = nativeMarket.underlyingPriceUSD
-      if (nativeTokenPriceUSD.gt(zeroBD)) {
-        let amountUnderlying = market.exchangeRate.times(market.totalSupply)
-        market.borrowRewardNative = getRewardEmission(
-          nativeTokenPriceUSD,
-          market.totalBorrows,
-          market.underlyingPriceUSD,
-          market.borrowRewardSpeedNative,
-        )
-        market.supplyRewardNative = getRewardEmission(
-          nativeTokenPriceUSD,
-          amountUnderlying,
-          market.underlyingPriceUSD,
-          market.supplyRewardSpeedNative,
-        )
-        if (blockNumber >= config.protocolNativePairStartBlock) {
-          // get protocol token price
-          let protocolTokenPriceUSD = getOneProtocolTokenInNativeToken(
-            config.protocolNativePairProtocolIndex,
-          ).times(nativeTokenPriceUSD)
-          if (protocolTokenPriceUSD.gt(zeroBD)) {
-            market.borrowRewardProtocol = getRewardEmission(
-              protocolTokenPriceUSD,
-              market.totalBorrows,
-              market.underlyingPriceUSD,
-              market.borrowRewardSpeedProtocol,
-            )
-            market.supplyRewardProtocol = getRewardEmission(
-              protocolTokenPriceUSD,
-              amountUnderlying,
-              market.underlyingPriceUSD,
-              market.supplyRewardSpeedProtocol,
-            )
-          }
-        }
-      }
-    }
-
-    let borrowRewardStateNativeResult = comptrollerContract.try_rewardBorrowState(
-      NativeTokenRewardType,
-      marketAddress,
-    )
-    if (borrowRewardStateNativeResult.reverted) {
-      log.warning('[updateMarket] try_rewardBorrowState(MOVR, MTOKEN) reverted', [])
-    } else {
-      market.borrowRewardStateNativeIndex = borrowRewardStateNativeResult.value.getIndex()
-      market.borrowRewardStateNativeTimestamp = borrowRewardStateNativeResult.value
-        .getTimestamp()
-        .toI32()
-    }
-
-    let borrowRewardStateProtocolResult = comptrollerContract.try_rewardBorrowState(
-      ProtocolTokenRewardType,
-      marketAddress,
-    )
-    if (borrowRewardStateProtocolResult.reverted) {
-      log.warning('[updateMarket] try_rewardBorrowState(MFAM, MTOKEN) reverted', [])
-    } else {
-      market.borrowRewardStateProtocolIndex =
-        borrowRewardStateProtocolResult.value.getIndex()
-      market.borrowRewardStateProtocolTimestamp = borrowRewardStateProtocolResult.value
-        .getTimestamp()
-        .toI32()
-    }
-
-    let supplyRewardStateNativeResult = comptrollerContract.try_rewardSupplyState(
-      NativeTokenRewardType,
-      marketAddress,
-    )
-    if (supplyRewardStateNativeResult.reverted) {
-      log.warning('[updateMarket] try_rewardSupplyState(MOVR, MTOKEN) reverted', [])
-    } else {
-      market.supplyRewardStateNativeIndex = supplyRewardStateNativeResult.value.getIndex()
-      market.supplyRewardStateNativeTimestamp = supplyRewardStateNativeResult.value
-        .getTimestamp()
-        .toI32()
-    }
-
-    let supplyRewardStateProtocolResult = comptrollerContract.try_rewardSupplyState(
-      ProtocolTokenRewardType,
-      marketAddress,
-    )
-    if (supplyRewardStateProtocolResult.reverted) {
-      log.warning('[updateMarket] try_rewardSupplyState(MFAM, MTOKEN) reverted', [])
-    } else {
-      market.supplyRewardStateProtocolIndex =
-        supplyRewardStateProtocolResult.value.getIndex()
-      market.supplyRewardStateProtocolTimestamp = supplyRewardStateProtocolResult.value
-        .getTimestamp()
-        .toI32()
-    }
 
     let borrowRatePerTimestampResult = contract.try_borrowRatePerTimestamp()
     if (borrowRatePerTimestampResult.reverted) {
@@ -345,23 +229,4 @@ function getOneProtocolTokenInNativeToken(protocolIndex: i32): BigDecimal {
   } else {
     return reserve1.div(reserve0)
   }
-}
-
-function getRewardEmission(
-  rewardTokenPriceUSD: BigDecimal,
-  underlyingAmount: BigDecimal,
-  underlyingPriceUSD: BigDecimal,
-  rewardSpeed: BigInt,
-): BigDecimal {
-  if (underlyingAmount == zeroBD || underlyingPriceUSD == zeroBD) {
-    return zeroBD
-  }
-  return rewardSpeed
-    .toBigDecimal()
-    .div(mantissaFactorBD)
-    .times(intToBigDecimal(secondsPerDay))
-    .times(rewardTokenPriceUSD)
-    .div(underlyingAmount.times(underlyingPriceUSD))
-    .times(intToBigDecimal(daysPerYear))
-    .times(intToBigDecimal(100))
 }
