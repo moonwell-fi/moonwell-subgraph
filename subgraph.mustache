@@ -45,10 +45,6 @@ dataSources:
           handler: handleNewLiquidationIncentive
         - event: NewPriceOracle(address,address)
           handler: handleNewPriceOracle
-        - event: SupplyRewardSpeedUpdated(uint8,indexed address,uint256)
-          handler: handleSupplyRewardSpeedUpdated
-        - event: BorrowRewardSpeedUpdated(uint8,indexed address,uint256)
-          handler: handleBorrowRewardSpeedUpdated
         - event: NewBorrowCap(indexed address,uint256)
           handler: handleNewBorrowCap
         - event: ActionPaused(address,string,bool)

@@ -161,11 +161,6 @@ export function handleBorrow(event: Borrow): void {
 
   if (event.params.accountBorrows.equals(event.params.borrowAmount)) {
     // If this is the first borrow, increment the market's borrower count
-    log.warning('[handleBorrow] +1 event.params.accountBorrows.equals(event.params.borrowAmount) marketID: {}, borrower: {}, amount: {}', [
-      marketID,
-      event.params.borrower.toHexString(),
-      event.params.borrowAmount.toString()
-    ])
     market.borrowerCount = market.borrowerCount + 1
     market.save()
   }
@@ -219,12 +214,6 @@ export function handleRepayBorrow(event: RepayBorrow): void {
 
   if (event.params.accountBorrows.equals(zeroBI)) {
     // If this is the last borrow, decrement the market's borrower count
-    log.warning('[handleRepayBorrow] -1 event.params.accountBorrows.equals(0) marketID: {}, borrower: {}, amount repaid: {}, accountBorrows: {}', [
-      market.id,
-      event.params.borrower.toHexString(),
-      event.params.repayAmount.toString(),
-      event.params.accountBorrows.toString()
-    ])
     market.borrowerCount = market.borrowerCount - 1
     market.save()
   }
@@ -385,12 +374,6 @@ export function handleTransfer(event: Transfer): void {
     ])
   } else {
     if (balanceOfToAccountResult.value.equals(event.params.amount)) {
-      log.warning('[handleTransfer] +1 balanceOfToAccountResult.equals(event.params.amount) from: {}, to: {}, marketID: {}, amount: {}', [
-        event.params.from.toHexString(),
-        event.params.to.toHexString(),
-        marketID,
-        event.params.amount.toString()
-      ])
       market.supplierCount = market.supplierCount + 1
       market.save()
     }
@@ -406,12 +389,6 @@ export function handleTransfer(event: Transfer): void {
     // We should only decrement supplierCount when the from balance is now zero -AND- the from is not the market contract
     // We should not decrement supplier count when the from is the market contract (i.e. minting)
     if ((balanceOfFromAccountResult.value.equals(zeroBI) && !event.params.from.equals(cTokenContract._address))) {
-      log.warning('[handleTransfer] -1 balanceOfFromAccountResult.equals(event.params.amount) from: {}, to: {}, marketID: {}, amount: {}', [
-        event.params.from.toHexString(),
-        event.params.to.toHexString(),
-        marketID,
-        event.params.amount.toString()
-      ])
       market.supplierCount = market.supplierCount - 1
       market.save()
     }
