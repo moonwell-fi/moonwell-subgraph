@@ -172,8 +172,33 @@ export function updateMarket(
       )
     }
 
+    // update the price of the market
+    let underlyingTokenPriceUSD = getTokenPrice(
+      Address.fromString(market.id),
+      market.underlyingDecimals,
+    )
+    market.underlyingPriceUSD = underlyingTokenPriceUSD
+    if (!addrEq(market.id, config.mNativeAddr)) {
+      let nativeTokenPriceUSD = getTokenPrice(Address.fromString(config.mNativeAddr), 18)
+      if (nativeTokenPriceUSD.gt(zeroBD)) {
+        market.underlyingPrice = underlyingTokenPriceUSD.div(nativeTokenPriceUSD)
+      }
+    }
+    snapshotMarket(Address.fromString(market.id), event.block.timestamp.toI32())
     market.save()
   }
+}
+
+function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
+  let comptroller = Comptroller.load('1')!
+  let oracle = PriceOracle.bind(Address.fromString(comptroller.priceOracle))
+  let tryPrice = oracle.try_getUnderlyingPrice(token)
+
+  return tryPrice.reverted
+    ? zeroBD
+    : tryPrice.value
+        .toBigDecimal()
+        .div(exponentToBigDecimal(18 - underlyingDecimals + 18))
 }
 
 export function snapshotMarket(marketAddress: Address, blockTimestamp: i32): void {
