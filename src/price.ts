@@ -42,7 +42,8 @@ export function handleBlock(block: ethereum.Block): void {
 export function handleAnswerUpdated(event: AnswerUpdated): void {
   let feed = event.address.toHexString()
   let comptroller = Comptroller.load('1')!
-  let markets: Market[] = []
+  // This old code path only updates price for markets included in the event
+  /* let markets: Market[] = []
   for (let i = 0; i < comptroller._markets.length; i++) {
     let marketID = comptroller._markets[i]
     let market = Market.load(marketID)
@@ -58,10 +59,16 @@ export function handleAnswerUpdated(event: AnswerUpdated): void {
   if (markets.length === 0) {
     log.warning('[handleAnswerUpdated] relevant market not found for feed {}', [feed])
     return
-  }
+  } */
 
-  for (let i = 0; i < markets.length; i++) {
-    let market = markets[i]
+  // This new code path updates price for all markets
+  for (let i = 0; i < comptroller._markets.length; i++) {
+    let marketID = comptroller._markets[i]
+    let market = Market.load(marketID)
+    if (!market) {
+      log.warning('[handleAnswerUpdated] market {} not found', [marketID])
+      continue
+    }
     // update price of the market
     let underlyingTokenPriceUSD = getTokenPrice(
       Address.fromString(market.id),
