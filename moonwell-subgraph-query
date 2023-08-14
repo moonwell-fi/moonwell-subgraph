@@ -1,0 +1,14 @@
+Moonwell: Incentive data for GLMR
+Querying for the current state of the market, not historical.
+
+{
+  markets(first: 5, where: {symbol: "mGLMR"}) {
+    id
+    name
+    symbol
+    supplyRewardSpeedNative
+    blockTimestamp
+    underlyingSymbol
+    underlyingPriceUSD
+  }
+}
