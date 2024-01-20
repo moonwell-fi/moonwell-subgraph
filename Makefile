@@ -42,7 +42,7 @@ deploy-local:
 deploy-satsuma:
 	yarn graph deploy $(network) \
 	--version-label $(major_version_label)-$(minor_version_label) \
-	--node https://app.satsuma.xyz/api/subgraphs/deploy \
+	--node https://subgraphs.alchemy.com/api/subgraphs/deploy \
 	--deploy-key $(satsuma_access_token)
 
 all:
