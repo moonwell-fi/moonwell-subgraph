@@ -281,6 +281,8 @@ type TransferEvent implements CTokenTransfer @entity {
   blockTime: Int!
   "Symbol of the cToken transferred"
   cTokenSymbol: String!
+  "Underlying symbol of the cToken transferred"
+  underlyingSymbol: String!
 }
 
 """
@@ -302,6 +304,8 @@ type MintEvent implements CTokenTransfer @entity {
   blockTime: Int!
   "Symbol of the cToken transferred"
   cTokenSymbol: String!
+  "Underlying symbol of the cToken transferred"
+  underlyingSymbol: String!
   "Underlying token amount transferred"
   underlyingAmount: BigDecimal
 }
@@ -325,6 +329,8 @@ type RedeemEvent implements CTokenTransfer @entity {
   blockTime: Int!
   "Symbol of the cToken transferred"
   cTokenSymbol: String!
+  "Underlying symbol of the cToken transferred"
+  underlyingSymbol: String!
   "Underlying token amount transferred"
   underlyingAmount: BigDecimal
 }

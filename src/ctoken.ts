@@ -70,6 +70,7 @@ export function handleMint(event: Mint): void {
   mint.blockNumber = event.block.number.toI32()
   mint.blockTime = event.block.timestamp.toI32()
   mint.cTokenSymbol = market.symbol
+  mint.underlyingSymbol = market.underlyingSymbol
   mint.underlyingAmount = underlyingAmount
   mint.save()
 }
@@ -109,6 +110,7 @@ export function handleRedeem(event: Redeem): void {
   redeem.blockNumber = event.block.number.toI32()
   redeem.blockTime = event.block.timestamp.toI32()
   redeem.cTokenSymbol = market.symbol
+  redeem.underlyingSymbol = market.underlyingSymbol
   redeem.underlyingAmount = underlyingAmount
   redeem.save()
 }
@@ -474,6 +476,7 @@ export function handleTransfer(event: Transfer): void {
   transfer.blockNumber = event.block.number.toI32()
   transfer.blockTime = event.block.timestamp.toI32()
   transfer.cTokenSymbol = market.symbol
+  transfer.underlyingSymbol = market.underlyingSymbol
   transfer.save()
 }
 
