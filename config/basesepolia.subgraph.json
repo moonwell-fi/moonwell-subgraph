@@ -1,5 +1,5 @@
 {
-  "network": "base-testnet",
+  "network": "base-sepolia",
   "comptrollerAddr": "0xC72ba45f2Ae134F21DAEb2b7B5fd5De0064Ee9bB",
   "comptrollerStartBlock": 6601399,
   "governorAddr": "0x0000000000000000000000000000000000000000",
