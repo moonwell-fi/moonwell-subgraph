@@ -1,7 +1,7 @@
 {
   "network": "mbase",
-  "comptrollerAddr": "0x4524e0Dfa042188B1F9f804642456277dbDBE253",
-  "comptrollerStartBlock": 2627672,
-  "governorAddr": "0x1eA239b116b911374BA144EFb5cA077d3A224fE9",
-  "governorStartBlock": 2634065
+  "comptrollerAddr": "0x1a14f9af09648F6550c339A71D3e449e31B8E0Ae",
+  "comptrollerStartBlock": 6248973,
+  "governorAddr": "0x5713DD9A2B2ce515CF9232F48B457aebFb04b292",
+  "governorStartBlock": 4763313
 }
