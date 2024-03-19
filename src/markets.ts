@@ -209,6 +209,7 @@ export function snapshotMarket(marketAddress: Address, blockTimestamp: i32): voi
     return
   }
   let snapshot = getOrCreateMarketDailySnapshot(marketID, blockTimestamp)
+  if (snapshot.totalSupplies != zeroBD) return
   snapshot.totalBorrows = market.totalBorrows
   snapshot.totalBorrowsUSD = market.totalBorrows.times(market.underlyingPriceUSD)
   snapshot.totalSupplies = market.exchangeRate.times(market.totalSupply)
