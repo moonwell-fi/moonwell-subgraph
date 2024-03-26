@@ -11,6 +11,7 @@ const config = new Config(
   [],
   '0x0000000000000000000000000000000000000000',
   2147483647, // no safety module, start at max i32 (never)
+  2147483647,
 )
 
 export default config

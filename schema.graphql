@@ -54,6 +54,9 @@ type Market @entity {
   "CToken supply."
   totalSupply: BigDecimal!
 
+  "Bad debt."
+  badDebt: BigDecimal
+
   "Reserves stored in the contract"
   reserves: BigDecimal!
 

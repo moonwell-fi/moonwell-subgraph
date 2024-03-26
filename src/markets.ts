@@ -154,6 +154,13 @@ export function updateMarket(
       .truncate(market.underlyingDecimals)
     market.borrowIndex = event.params.borrowIndex
 
+    if (blockNumber >= config.badDebtStartBlock) {
+      market.badDebt = contract.badDebt()
+        .toBigDecimal()
+        .div(exponentToBigDecimal(market.underlyingDecimals))
+        .truncate(market.underlyingDecimals)
+    }
+
     let borrowRatePerTimestampResult = contract.try_borrowRatePerTimestamp()
     if (borrowRatePerTimestampResult.reverted) {
       log.warning('[updateMarket] try_borrowRatePerTimestamp reverted', [])
@@ -184,7 +191,11 @@ export function updateMarket(
         market.underlyingPrice = underlyingTokenPriceUSD.div(nativeTokenPriceUSD)
       }
     }
-    snapshotMarket(Address.fromString(market.id), event.block.timestamp.toI32())
+    snapshotMarket(
+      Address.fromString(market.id),
+      event.block.timestamp.toI32(),
+      event.block.number.toI32()
+    )
     market.save()
   }
 }
@@ -201,7 +212,10 @@ function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
         .div(exponentToBigDecimal(18 - underlyingDecimals + 18))
 }
 
-export function snapshotMarket(marketAddress: Address, blockTimestamp: i32): void {
+export function snapshotMarket(
+    marketAddress: Address,
+    blockTimestamp: i32,
+    blockNumber: i32): void {
   if (blockTimestamp < 1704096000) return; // Don't snapshot before 01-01-2024
   let marketID = marketAddress.toHexString()
   let market = Market.load(marketID)
@@ -214,6 +228,9 @@ export function snapshotMarket(marketAddress: Address, blockTimestamp: i32): voi
   snapshot.totalBorrows = market.totalBorrows
   snapshot.totalBorrowsUSD = market.totalBorrows.times(market.underlyingPriceUSD)
   snapshot.totalSupplies = market.exchangeRate.times(market.totalSupply)
+  if (blockNumber >= config.badDebtStartBlock && market.badDebt != null) {
+    snapshot.totalSupplies = snapshot.totalSupplies.minus(market.badDebt)
+  }
   snapshot.totalSuppliesUSD = market.exchangeRate
     .times(market.totalSupply)
     .times(market.underlyingPriceUSD)

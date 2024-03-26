@@ -17,6 +17,7 @@ const config = new Config(
   ],
   '0xCd76e63f3AbFA864c53b4B98F57c1aA6539FDa3a',
   1513267,
+  2147483647,
 )
 
 export default config
