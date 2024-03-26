@@ -9,8 +9,8 @@ const config = new Config(
   0,
   '0x0000000000000000000000000000000000000000',
   [],
-  '0x0000000000000000000000000000000000000000',
-  2147483647, // no safety module, start at max i32 (never)
+  '0xe66E3A37C3274Ac24FE8590f7D84A2427194DC17',
+  12187715,
 )
 
 export default config

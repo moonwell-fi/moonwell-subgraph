@@ -9,8 +9,8 @@ const config = new Config(
   0,
   '0x5713DD9A2B2ce515CF9232F48B457aebFb04b292',
   [],
-  '0x11fD9c97B0B8F50f6EB0e68342e3de8F76dd45fc',
-  2621451,
+  '0xCBfcab5e2E9DdC0B5Fa8B06Cd0e7a928c6D58DC0',
+  6297127,
 )
 
 export default config
