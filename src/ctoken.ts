@@ -22,7 +22,7 @@ import {
   RepayEvent,
 } from '../generated/schema'
 
-import { snapshotMarket, updateMarket } from './markets'
+import { updateMarket } from './markets'
 import {
   createAccount,
   updateCommonCTokenStats,
@@ -487,8 +487,6 @@ export function handleAccrueInterest(event: AccrueInterest): void {
     event.block.number.toI32(),
     event,
   )
-  // Moved this into the price handler so snapshots can get taken more frequently
-  // snapshotMarket(event.address, event.block.timestamp.toI32())
 }
 
 export function handleNewReserveFactor(event: NewReserveFactor): void {

@@ -82,7 +82,11 @@ export function handleAnswerUpdated(event: AnswerUpdated): void {
       }
     }
     market.save()
-    snapshotMarket(Address.fromString(market.id), event.block.timestamp.toI32())
+    snapshotMarket(
+      Address.fromString(market.id),
+      event.block.timestamp.toI32(),
+      event.block.number.toI32(),
+    )
   }
   snapshotStaking(event.block.number.toI32(), event.block.timestamp.toI32())
 }

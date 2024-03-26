@@ -18,5 +18,6 @@ export class Config {
     public readonly oracleOverrides: Array<OracleOverride>,
     public readonly safetyModuleAddr: string,
     public readonly safetyModuleStartBlock: i32,
+    public readonly badDebtStartBlock: i32,
   ) {}
 }
