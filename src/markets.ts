@@ -202,6 +202,7 @@ function getTokenPrice(token: Address, underlyingDecimals: i32): BigDecimal {
 }
 
 export function snapshotMarket(marketAddress: Address, blockTimestamp: i32): void {
+  if (blockTimestamp < 1704096000) return; // Don't snapshot before 01-01-2024
   let marketID = marketAddress.toHexString()
   let market = Market.load(marketID)
   if (!market) {
