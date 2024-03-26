@@ -73,6 +73,7 @@ export function createMarket(marketID: string): Market | null {
   market.borrowerCount = 0
   market.supplierCount = 0
   market.borrowCap = zeroBI
+  market.badDebt = zeroBD
 
   market.borrowIndex = zeroBI
   market.reserveFactor = reserveFactor.reverted ? BigInt.fromI32(0) : reserveFactor.value
@@ -153,7 +154,7 @@ export function updateMarket(
       .div(exponentToBigDecimal(market.underlyingDecimals))
       .truncate(market.underlyingDecimals)
     market.borrowIndex = event.params.borrowIndex
-
+    market.badDebt = zeroBD
     if (blockNumber >= config.badDebtStartBlock) {
       market.badDebt = contract.badDebt()
         .toBigDecimal()
@@ -228,9 +229,7 @@ export function snapshotMarket(
   snapshot.totalBorrows = market.totalBorrows
   snapshot.totalBorrowsUSD = market.totalBorrows.times(market.underlyingPriceUSD)
   snapshot.totalSupplies = market.exchangeRate.times(market.totalSupply)
-  if (blockNumber >= config.badDebtStartBlock && market.badDebt != null) {
-    snapshot.totalSupplies = snapshot.totalSupplies.minus(market.badDebt)
-  }
+  snapshot.totalSupplies = snapshot.totalSupplies.minus(market.badDebt)
   snapshot.totalSuppliesUSD = market.exchangeRate
     .times(market.totalSupply)
     .times(market.underlyingPriceUSD)
