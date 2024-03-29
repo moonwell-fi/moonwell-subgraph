@@ -155,7 +155,7 @@ export function updateMarket(
       .truncate(market.underlyingDecimals)
     market.borrowIndex = event.params.borrowIndex
     market.badDebt = zeroBD
-    if (blockNumber >= config.badDebtStartBlock) {
+    if ((blockNumber >= config.badDebtStartBlock) && (market.symbol != 'mGLMR')) {
       market.badDebt = contract.badDebt()
         .toBigDecimal()
         .div(exponentToBigDecimal(market.underlyingDecimals))
