@@ -58,7 +58,7 @@ export function handleAnswerUpdated(event: AnswerUpdated): void {
   let feed = event.address.toHexString()
   let comptroller = Comptroller.load('1')!
   // This old code path only updates price for markets included in the event
-  /* let markets: Market[] = []
+  let markets: Market[] = []
   for (let i = 0; i < comptroller._markets.length; i++) {
     let marketID = comptroller._markets[i]
     let market = Market.load(marketID)
@@ -74,10 +74,10 @@ export function handleAnswerUpdated(event: AnswerUpdated): void {
   if (markets.length === 0) {
     log.warning('[handleAnswerUpdated] relevant market not found for feed {}', [feed])
     return
-  } */
+  }
 
   // This new code path updates price for all markets
-  for (let i = 0; i < comptroller._markets.length; i++) {
+  /* for (let i = 0; i < comptroller._markets.length; i++) {
     let marketID = comptroller._markets[i]
     let market = Market.load(marketID)
     if (!market) {
@@ -97,12 +97,7 @@ export function handleAnswerUpdated(event: AnswerUpdated): void {
       }
     }
     market.save()
-    /* snapshotMarket(
-      Address.fromString(market.id),
-      event.block.timestamp.toI32(),
-      event.block.number.toI32(),
-    ) */ // Moved to handleBlock
-  }
+  } */
   snapshotStaking(event.block.number.toI32(), event.block.timestamp.toI32())
 }
 

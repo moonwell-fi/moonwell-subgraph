@@ -224,7 +224,7 @@ export function snapshotMarket(
     log.warning('[snapshotMarket] market {} not found', [marketID])
     return
   }
-  let snapshot = getOrCreateMarketDailySnapshot(marketID, blockTimestamp)
+  let snapshot = getOrCreateMarketDailySnapshot(marketID, blockTimestamp, blockNumber)
   if (snapshot.totalSupplies != zeroBD) return
   snapshot.totalBorrows = market.totalBorrows
   snapshot.totalBorrowsUSD = market.totalBorrows.times(market.underlyingPriceUSD)
