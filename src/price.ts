@@ -34,6 +34,21 @@ export function handleBlock(block: ethereum.Block): void {
       Feed.create(newFeed)
     }
   }
+  // Market and account daily snapshots
+  let comptroller = Comptroller.load('1')!
+  for (let i = 0; i < comptroller._markets.length; i++) {
+    let marketID = comptroller._markets[i]
+    let market = Market.load(marketID)
+    if (!market) {
+      log.warning('[snapshotMarket] market {} not found', [marketID])
+      continue
+    }
+    snapshotMarket(
+      Address.fromString(market.id),
+      block.timestamp.toI32(),
+      block.number.toI32(),
+    )
+  }
 }
 
 // Update market price when feed contract emits AnswerUpdated
@@ -82,11 +97,11 @@ export function handleAnswerUpdated(event: AnswerUpdated): void {
       }
     }
     market.save()
-    snapshotMarket(
+    /* snapshotMarket(
       Address.fromString(market.id),
       event.block.timestamp.toI32(),
       event.block.number.toI32(),
-    )
+    ) */ // Moved to handleBlock
   }
   snapshotStaking(event.block.number.toI32(), event.block.timestamp.toI32())
 }
