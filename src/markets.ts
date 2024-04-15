@@ -192,11 +192,11 @@ export function updateMarket(
         market.underlyingPrice = underlyingTokenPriceUSD.div(nativeTokenPriceUSD)
       }
     }
-    snapshotMarket(
+    /* snapshotMarket(
       Address.fromString(market.id),
       event.block.timestamp.toI32(),
       event.block.number.toI32()
-    )
+    ) */ // This is not needed here, as it is already called in handleAnswerUpdated
     market.save()
   }
 }

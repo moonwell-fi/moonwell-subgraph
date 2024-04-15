@@ -178,78 +178,80 @@ export function getOrCreateMarketDailySnapshot(
     snapshot.totalBorrowsUSD = zeroBD
     snapshot.totalSuppliesUSD = zeroBD
     snapshot.save()
+  }
 
-    // Load the market entity
-    let market = Market.load(marketID)
+  // Load the market entity
+  let market = Market.load(marketID)
 
-    // Iterate over the accountCToken IDs and create a snapshot for each one
-    if (market) {
+  // Iterate over the accountCToken IDs and create a snapshot for each one
+  if (market) {
 
-      let accounts = market.accountCTokens.load();
+    let accounts = market.accountCTokens.load();
 
-      for (let i = 0; i < accounts.length; i++) {
-        let accountCToken = accounts[i]
+    for (let i = 0; i < accounts.length; i++) {
+      let accountCToken = accounts[i]
 
-        // Create new AccountCTokenDailySnapshot
-        if (accountCToken) {
-          let id = accountCToken.account
-            .concat('-')
-            .concat(market.id)
-            .concat('-')
-            .concat(getEpochDays(blockTimestamp).toString())
-          let accountSnapshot = new AccountCTokenDailySnapshot(id)
-          accountSnapshot.account = accountCToken.account
-          accountSnapshot.market = marketID
+      // Check if the last digit of the account id (converted from hex) matches the blockTimestamp mod 16
+      let lastDigit = parseInt(accountCToken.account.slice(-1), 16);
+      // Create new AccountCTokenDailySnapshot only for 1/16th of accounts w/ modulo operation
+      if ((accountCToken) && (lastDigit === blockTimestamp % 16)) {
+        let id = accountCToken.account
+          .concat('-')
+          .concat(market.id)
+          .concat('-')
+          .concat(getEpochDays(blockTimestamp).toString())
+        let accountSnapshot = new AccountCTokenDailySnapshot(id)
+        accountSnapshot.account = accountCToken.account
+        accountSnapshot.market = marketID
 
-          // Compute snapshot fields
-          // This call should return the current/up to date borrow balance of the account
-          let contract = CToken.bind(Address.fromString(market.id))
-          let borrowBalanceResult = contract.try_borrowBalanceCurrent(Address.fromString(accountCToken.account))
-          if (borrowBalanceResult.reverted) {
-            log.warning('[getOrCreateMarketDailySnapshot] try_borrowBalanceCurrent reverted; market: {} account: {}', [
-              market.id,
-              accountCToken.account,
-            ])
-            accountSnapshot.totalBorrows = zeroBD
-          } else {
-            accountSnapshot.totalBorrows = borrowBalanceResult.value.toBigDecimal().div(
-              exponentToBigDecimal(market.underlyingDecimals))
-          }
-          accountSnapshot.totalSupplies = accountCToken.cTokenBalance
-            .times(market.exchangeRate)
-          accountSnapshot.totalBorrowsUSD = accountSnapshot.totalBorrows
-            .times(market.underlyingPriceUSD)
-          accountSnapshot.totalSuppliesUSD = accountCToken.cTokenBalance
-            .times(market.exchangeRate)
-            .times(market.underlyingPriceUSD)
-          accountSnapshot.collateralFactor = market.collateralFactor
-          if (accountSnapshot.totalSupplies.gt(zeroBD)) {
-            accountSnapshot.collateralValueUSD =
-              accountSnapshot.totalSuppliesUSD
-                .times(market.collateralFactor)
-          } else {
-            accountSnapshot.collateralValueUSD = zeroBD
-          }
-
-          // Save the AccountCTokenDailySnapshot
-          accountSnapshot.save()
-
-          // Update the AccountDailySnapshot
-          let accountDailySnapshot = getOrCreateAccountDailySnapshot(
+        // Compute snapshot fields
+        // This call should return the current/up to date borrow balance of the account
+        let contract = CToken.bind(Address.fromString(market.id))
+        let borrowBalanceResult = contract.try_borrowBalanceCurrent(Address.fromString(accountCToken.account))
+        if (borrowBalanceResult.reverted) {
+          log.warning('[getOrCreateMarketDailySnapshot] try_borrowBalanceCurrent reverted; market: {} account: {}', [
+            market.id,
             accountCToken.account,
-            blockTimestamp,
-          )
-          accountDailySnapshot.totalSuppliesUSD = accountDailySnapshot.totalSuppliesUSD.plus(
-            accountSnapshot.totalSuppliesUSD,
-          )
-          accountDailySnapshot.totalBorrowsUSD = accountDailySnapshot.totalBorrowsUSD.plus(
-            accountSnapshot.totalBorrowsUSD,
-          )
-          accountDailySnapshot.collateralValueUSD = accountDailySnapshot.collateralValueUSD.plus(
-            accountSnapshot.collateralValueUSD,
-          )
-          accountDailySnapshot.save()
+          ])
+          accountSnapshot.totalBorrows = zeroBD
+        } else {
+          accountSnapshot.totalBorrows = borrowBalanceResult.value.toBigDecimal().div(
+            exponentToBigDecimal(market.underlyingDecimals))
         }
+        accountSnapshot.totalSupplies = accountCToken.cTokenBalance
+          .times(market.exchangeRate)
+        accountSnapshot.totalBorrowsUSD = accountSnapshot.totalBorrows
+          .times(market.underlyingPriceUSD)
+        accountSnapshot.totalSuppliesUSD = accountCToken.cTokenBalance
+          .times(market.exchangeRate)
+          .times(market.underlyingPriceUSD)
+        accountSnapshot.collateralFactor = market.collateralFactor
+        if (accountSnapshot.totalSupplies.gt(zeroBD)) {
+          accountSnapshot.collateralValueUSD =
+            accountSnapshot.totalSuppliesUSD
+              .times(market.collateralFactor)
+        } else {
+          accountSnapshot.collateralValueUSD = zeroBD
+        }
+
+        // Save the AccountCTokenDailySnapshot
+        accountSnapshot.save()
+
+        // Update the AccountDailySnapshot
+        let accountDailySnapshot = getOrCreateAccountDailySnapshot(
+          accountCToken.account,
+          blockTimestamp,
+        )
+        accountDailySnapshot.totalSuppliesUSD = accountDailySnapshot.totalSuppliesUSD.plus(
+          accountSnapshot.totalSuppliesUSD,
+        )
+        accountDailySnapshot.totalBorrowsUSD = accountDailySnapshot.totalBorrowsUSD.plus(
+          accountSnapshot.totalBorrowsUSD,
+        )
+        accountDailySnapshot.collateralValueUSD = accountDailySnapshot.collateralValueUSD.plus(
+          accountSnapshot.collateralValueUSD,
+        )
+        accountDailySnapshot.save()
       }
     }
   }
