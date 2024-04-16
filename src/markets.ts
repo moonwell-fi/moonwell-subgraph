@@ -217,7 +217,8 @@ export function snapshotMarket(
     marketAddress: Address,
     blockTimestamp: i32,
     blockNumber: i32): void {
-  if (blockTimestamp < 1704096000) return; // Don't snapshot before 01-01-2024
+  // if (blockTimestamp < 1704096000) return; // Don't snapshot before 01-01-2024
+  if (blockTimestamp < 1710654556) return; // Don't snapshot before 03-16-2024
   let marketID = marketAddress.toHexString()
   let market = Market.load(marketID)
   if (!market) {

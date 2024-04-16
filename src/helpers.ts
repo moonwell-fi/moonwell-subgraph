@@ -148,10 +148,8 @@ export function getOrCreateAccountDailySnapshot(
     .concat('-')
     .concat(getEpochDays(blockTimestamp).toString()
   )
-  log.info('[getOrCreateAccountDailySnapshot] snapshotID: {}', [snapshotID])
   let snapshot = AccountDailySnapshot.load(snapshotID)
   if (!snapshot) {
-    log.info('[getOrCreateAccountDailySnapshot] snapshot not found, creating new snapshot {}', [snapshotID])
     snapshot = new AccountDailySnapshot(snapshotID)
     snapshot.account = accountID.toLowerCase()
     snapshot.totalSuppliesUSD = zeroBD
