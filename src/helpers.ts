@@ -201,7 +201,9 @@ export function getOrCreateMarketDailySnapshot(
           .concat(getEpochDays(blockTimestamp).toString())
         let accountSnapshot = AccountCTokenDailySnapshot.load(id)
         if (!accountSnapshot) {
-          let accountSnapshot = new AccountCTokenDailySnapshot(id)
+          accountSnapshot = new AccountCTokenDailySnapshot(id)
+        }
+        if (accountSnapshot) {
           accountSnapshot.account = accountCToken.account
           accountSnapshot.market = marketID
 
