@@ -202,8 +202,6 @@ export function getOrCreateMarketDailySnapshot(
         let accountSnapshot = AccountCTokenDailySnapshot.load(id)
         if (!accountSnapshot) {
           accountSnapshot = new AccountCTokenDailySnapshot(id)
-        }
-        if (accountSnapshot) {
           accountSnapshot.account = accountCToken.account
           accountSnapshot.market = marketID
 
