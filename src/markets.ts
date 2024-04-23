@@ -192,11 +192,11 @@ export function updateMarket(
         market.underlyingPrice = underlyingTokenPriceUSD.div(nativeTokenPriceUSD)
       }
     }
-    snapshotMarket(
+    /* snapshotMarket(
       Address.fromString(market.id),
       event.block.timestamp.toI32(),
       event.block.number.toI32()
-    )
+    ) */ // This is not needed here, as it is already called in handleAnswerUpdated
     market.save()
   }
 }
@@ -217,14 +217,15 @@ export function snapshotMarket(
     marketAddress: Address,
     blockTimestamp: i32,
     blockNumber: i32): void {
-  if (blockTimestamp < 1704096000) return; // Don't snapshot before 01-01-2024
+  // if (blockTimestamp < 1704096000) return; // Don't snapshot before 01-01-2024
+  if (blockTimestamp < 1710654556) return; // Don't snapshot before 03-16-2024
   let marketID = marketAddress.toHexString()
   let market = Market.load(marketID)
   if (!market) {
     log.warning('[snapshotMarket] market {} not found', [marketID])
     return
   }
-  let snapshot = getOrCreateMarketDailySnapshot(marketID, blockTimestamp)
+  let snapshot = getOrCreateMarketDailySnapshot(marketID, blockTimestamp, blockNumber)
   if (snapshot.totalSupplies != zeroBD) return
   snapshot.totalBorrows = market.totalBorrows
   snapshot.totalBorrowsUSD = market.totalBorrows.times(market.underlyingPriceUSD)

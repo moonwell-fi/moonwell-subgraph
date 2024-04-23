@@ -148,10 +148,8 @@ export function getOrCreateAccountDailySnapshot(
     .concat('-')
     .concat(getEpochDays(blockTimestamp).toString()
   )
-  log.info('[getOrCreateAccountDailySnapshot] snapshotID: {}', [snapshotID])
   let snapshot = AccountDailySnapshot.load(snapshotID)
   if (!snapshot) {
-    log.info('[getOrCreateAccountDailySnapshot] snapshot not found, creating new snapshot {}', [snapshotID])
     snapshot = new AccountDailySnapshot(snapshotID)
     snapshot.account = accountID.toLowerCase()
     snapshot.totalSuppliesUSD = zeroBD
@@ -165,6 +163,7 @@ export function getOrCreateAccountDailySnapshot(
 export function getOrCreateMarketDailySnapshot(
   marketID: string,
   blockTimestamp: i32,
+  blockNumber: i32,
 ): MarketDailySnapshot {
   let snapshotID = marketID.concat('-').concat(getEpochDays(blockTimestamp).toString())
   log.info('[getorCreateMarketDailySnapshot] snapshotID: {}', [snapshotID])
@@ -178,26 +177,31 @@ export function getOrCreateMarketDailySnapshot(
     snapshot.totalBorrowsUSD = zeroBD
     snapshot.totalSuppliesUSD = zeroBD
     snapshot.save()
+  }
 
-    // Load the market entity
-    let market = Market.load(marketID)
+  // Load the market entity
+  let market = Market.load(marketID)
 
-    // Iterate over the accountCToken IDs and create a snapshot for each one
-    if (market) {
+  // Iterate over the accountCToken IDs and create a snapshot for each one
+  if (market) {
 
-      let accounts = market.accountCTokens.load();
+    let accounts = market.accountCTokens.load();
 
-      for (let i = 0; i < accounts.length; i++) {
-        let accountCToken = accounts[i]
+    for (let i = 0; i < accounts.length; i++) {
+      let accountCToken = accounts[i]
 
-        // Create new AccountCTokenDailySnapshot
-        if (accountCToken) {
-          let id = accountCToken.account
-            .concat('-')
-            .concat(market.id)
-            .concat('-')
-            .concat(getEpochDays(blockTimestamp).toString())
-          let accountSnapshot = new AccountCTokenDailySnapshot(id)
+      // Check if the last digit of the account id (converted from hex) matches the blockTimestamp mod 16
+      let lastDigit = parseInt(accountCToken.account.slice(-1), 16);
+      // Create new AccountCTokenDailySnapshot only for 1/16th of accounts w/ modulo operation
+      if ((accountCToken) && (lastDigit === blockNumber % 16)) {
+        let id = accountCToken.account
+          .concat('-')
+          .concat(market.id)
+          .concat('-')
+          .concat(getEpochDays(blockTimestamp).toString())
+        let accountSnapshot = AccountCTokenDailySnapshot.load(id)
+        if (!accountSnapshot) {
+          accountSnapshot = new AccountCTokenDailySnapshot(id)
           accountSnapshot.account = accountCToken.account
           accountSnapshot.market = marketID
 
